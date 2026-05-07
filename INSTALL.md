@@ -24,7 +24,7 @@ Das ist die einfachste Methode. Du sagst Claude einfach, was er machen soll.
 
 ```
 Installiere das Hyperframes Addon by Vibe Coding DACH von 
-https://github.com/[DEIN-USERNAME]/hyperframes-vibecoding-dach 
+https://github.com/ZeldoGiQ/hyperframes-vibecoding-dach 
 
 Mach alles automatisch:
 1. Repo klonen
@@ -43,7 +43,7 @@ Mach alles automatisch:
 ### Windows
 
 ```bash
-git clone https://github.com/[DEIN-USERNAME]/hyperframes-vibecoding-dach.git
+git clone https://github.com/ZeldoGiQ/hyperframes-vibecoding-dach.git
 cd hyperframes-vibecoding-dach
 scripts\install.bat
 ```
@@ -51,7 +51,7 @@ scripts\install.bat
 ### Mac/Linux
 
 ```bash
-git clone https://github.com/[DEIN-USERNAME]/hyperframes-vibecoding-dach.git
+git clone https://github.com/ZeldoGiQ/hyperframes-vibecoding-dach.git
 cd hyperframes-vibecoding-dach
 chmod +x scripts/install.sh
 ./scripts/install.sh

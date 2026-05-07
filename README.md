@@ -14,7 +14,7 @@ Dieses Addon erweitert [Hyperframes](https://hyperframes.heygen.com) um deutschs
 
 ```
 Installiere das Hyperframes Addon by Vibe Coding DACH von 
-https://github.com/[DEIN-USERNAME]/hyperframes-vibecoding-dach 
+https://github.com/ZeldoGiQ/hyperframes-vibecoding-dach 
 und führe das komplette Setup aus.
 ```
 
