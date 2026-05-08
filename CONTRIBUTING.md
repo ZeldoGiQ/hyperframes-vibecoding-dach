@@ -1,42 +1,47 @@
-# 🤝 Beiträge zum Hyperframes Addon
+# 🤝 Contributing to AIVC DACH
 
-Du willst neue Templates beisteuern oder Bugs fixen? Super!
+Want to add new templates or fix bugs? Awesome!
 
-## Neue Templates beitragen
+## Adding new templates
 
-1. Kopiere einen bestehenden Template-Ordner aus `templates/` als Basis
-2. Passe `template.html` an (nutze die CSS-Variablen `--primary`, `--accent`, `--bg`, `--text`)
-3. Erstelle eine `meta.json` mit allen Variablen und Szenen
-4. Trage das Template in `templates.json` ein
-5. Pull Request öffnen
+1. Copy an existing template folder from `templates/` as a base.
+2. Adjust `template.html` (use the CSS variables `--primary`, `--accent`, `--bg`, `--text`).
+3. Create a `meta.json` with all variables and scenes.
+4. Register the template in `templates.json`.
+5. Open a Pull Request.
 
-## Template-Konventionen
+## Template conventions
 
-- **Variablen** in `{{DOPPELTEN_GESCHWEIFTEN_KLAMMERN}}` (UPPER_SNAKE_CASE)
-- **CSS-Variablen** für alles was per Brand anpassbar sein soll
-- **Animations-Timings** in Sekunden, klar dokumentiert
-- **Maximale Längen** für Texte in `meta.json` festlegen
-- **Kommentar am Anfang** mit Liste aller Variablen
+- **Variables** in `{{DOUBLE_CURLY_BRACES}}` (UPPER_SNAKE_CASE)
+- **CSS variables** for everything that should be brand-customizable
+- **Animation timings** in seconds, clearly documented
+- **Maximum lengths** for texts declared in `meta.json`
+- **Comment at the top** of each template listing all variables
+- Each template MUST include the `__seekToTime` helper script at the end of `<body>` so the renderer can step through animations deterministically.
+- Each template MUST include the auto-fit `--preview-scale` snippet so the HTML is preview-friendly in any browser size (the renderer overrides it with viewport=stage size, so it has no effect on the MP4).
+- Default copy in templates is in **English**. The helper can localize per-render based on the user's language.
 
-## SKILL.md Änderungen
+## SKILL.md changes
 
-Bei Änderungen an `SKILL.md`:
-- Auf Deutsch bleiben (User-facing Sprache)
-- Schritt-für-Schritt Anleitungen hinzufügen
-- Anti-Patterns ergänzen wenn nötig
-- Versionsnummer erhöhen
+When changing `SKILL.md`:
+- Keep the user-facing text in English (the helper translates at runtime).
+- Add step-by-step instructions where helpful.
+- Add anti-patterns when needed.
+- Bump the version number.
 
-## Bug Reports
+## Bug reports
 
-Issue auf GitHub öffnen mit:
-- Betriebssystem (Windows/Mac/Linux)
-- Was hast du gemacht?
-- Was ist passiert?
-- Was hätte passieren sollen?
-- Logs aus `~/.hyperframes-vbc/cache/` falls vorhanden
+Open a GitHub issue with:
+- Operating system (Windows / Mac / Linux)
+- What did you do?
+- What happened?
+- What should have happened?
+- Logs from `~/.aivc-dach/cache/` if any.
 
-## Code of Conduct
+Use the templates in `.github/ISSUE_TEMPLATE/`.
 
-Sei nett. Sei hilfsbereit. Hilf Anfängern.
+## Code of conduct
 
-Mehr nicht.
+Be kind. Be helpful. Help beginners.
+
+That's it.

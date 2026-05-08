@@ -1,7 +1,7 @@
 {
-  "version": "1.0",
+  "version": "2.0",
   "brand": {
-    "name": "Mein Kanal",
+    "name": "My Brand",
     "primaryColor": "#0EA5E9",
     "accentColor": "#F59E0B",
     "backgroundColor": "#0A0A0A",
@@ -10,12 +10,12 @@
     "fontBody": "Inter",
     "fontMono": "JetBrains Mono",
     "logoPath": null,
-    "logoPosition": "top-left",
-    "language": "de"
+    "logoPosition": "top-left"
   },
   "preferences": {
-    "subtitlesEnabled": true,
-    "subtitlesLanguage": "de",
+    "language": "auto",
+    "subtitlesEnabled": false,
+    "subtitlesLanguage": "auto",
     "defaultAspectRatio": "16:9",
     "outputDirectory": "./output"
   },

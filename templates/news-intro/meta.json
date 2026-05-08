@@ -1,50 +1,17 @@
 {
   "id": "news-intro",
-  "name": "News-Intro",
+  "name": "News Intro",
   "duration": 10,
   "aspectRatio": "16:9",
-  "description": "Klassisches News-Intro mit Logo-Reveal, Topic-Card und Outro",
+  "description": "Classic news intro with logo reveal, topic card and outro",
   "scenes": [
-    {
-      "id": 1,
-      "from": 0,
-      "to": 2,
-      "name": "Logo-Reveal",
-      "description": "Brand-Logo mit Glow-Effekt"
-    },
-    {
-      "id": 2,
-      "from": 2,
-      "to": 8,
-      "name": "Topic-Card",
-      "description": "News-Label + Titel + Untertitel"
-    },
-    {
-      "id": 3,
-      "from": 8,
-      "to": 10,
-      "name": "Outro",
-      "description": "Brand-Name unten + Aktuell-Badge"
-    }
+    {"id": 1, "from": 0, "to": 2, "name": "Logo reveal", "description": "Brand logo with glow effect"},
+    {"id": 2, "from": 2, "to": 8, "name": "Topic card", "description": "News label + title + subtitle"},
+    {"id": 3, "from": 8, "to": 10, "name": "Outro", "description": "Brand name at the bottom + Live badge"}
   ],
   "variables": [
-    {
-      "key": "TOPIC",
-      "label": "Thema/Titel der News",
-      "required": true,
-      "example": "Gemini 4 ist da",
-      "maxLength": 60
-    },
-    {
-      "key": "SUBTITLE",
-      "label": "Untertitel / kurze Beschreibung",
-      "required": false,
-      "example": "Das neue KI-Modell von Google",
-      "maxLength": 120
-    }
+    {"key": "TOPIC", "label": "News topic / title", "required": true, "example": "Gemini 4 is here", "maxLength": 60},
+    {"key": "SUBTITLE", "label": "Subtitle / short description", "required": false, "example": "Google's new AI model", "maxLength": 120}
   ],
-  "tts": {
-    "enabled": false,
-    "comment": "Kein TTS für reine Intros"
-  }
+  "tts": {"enabled": false, "comment": "No TTS for pure intros"}
 }

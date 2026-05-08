@@ -1,123 +1,170 @@
-# 🎬 Hyperframes Addon by Vibe Coding DACH
+# 🎬 AIVC DACH
 
+**Create professional videos with Claude Code – fully local, in minutes instead of hours.**
 
-**Erstelle professionelle Videos mit Claude Code – komplett auf Deutsch, in Minuten statt Stunden.**
+> by **ZELDOgiq & Media AI AT**
 
-Eigenständiger Video-Renderer für Anfänger – inspiriert von Hyperframes-Workflows ([HeyGen Hyperframes](https://hyperframes.heygen.com)), aber komplett **lokal** und ohne Cloud-Account. Das Addon enthält einen eingebauten Renderer (Puppeteer + ffmpeg), 6 fertige Format-Templates, einen Brand-Wizard und einen Claude-Code-Skill auf Deutsch. Du musst nichts können außer Claude Code installiert zu haben.
+A standalone video renderer for non-technical users. The repo ships with 6 production-ready format templates, a brand wizard, and a Claude Code skill that adapts to your language. The renderer is **fully local** – Puppeteer + ffmpeg under the hood, no cloud account, no API key, no upload of your data.
 
 ---
 
-## 🚀 Installation in 30 Sekunden
+## 🚀 Lazy Mode – install in 30 seconds
 
-**1. Öffne Claude Code in einem leeren Ordner**
+**1. Open Claude Code in any empty folder.**
 
-**2. Kopiere diesen einen Befehl und schicke ihn an Claude:**
+**2. Paste this single command:**
 
 ```
-Installiere das Hyperframes Addon by Vibe Coding DACH von 
-https://github.com/ZeldoGiQ/hyperframes-vibecoding-dach 
-und führe das komplette Setup aus.
+Install AIVC DACH from
+https://github.com/ZeldoGiQ/aivc-dach
+and run the full setup.
 ```
 
-**3. Fertig.** Claude installiert alles, fragt dich beim ersten Start nach deinem Branding und du kannst direkt loslegen.
+**3. Done.** Claude installs everything, runs a test render and you're ready to go. The brand wizard is **optional** – the renderer works out of the box with sensible defaults.
+
+After installation just say things like:
+
+> *"Make a news intro about the new Claude Opus update"*
+
+The helper picks the right template, asks only for what's missing, and renders an MP4.
 
 ---
 
-## 🎯 Was kannst du damit machen?
+## 🧠 Manual Mode – for devs
 
-Sechs fertige Video-Formate, jedes mit einem einfachen Befehl:
+```bash
+git clone https://github.com/ZeldoGiQ/aivc-dach
+cd aivc-dach
+./scripts/install.sh         # macOS / Linux
+# or:
+scripts\install.bat          # Windows
+```
 
-| Format | Länge | Beispiel-Befehl |
-|--------|-------|----------------|
-| 📰 **News-Intro** | 10 Sek | `Mach mir ein News-Intro über Gemini 4` |
-| 🎯 **Promo-Clip** | 30 Sek | `Erstelle einen Promo-Clip für mein Produkt XY` |
-| 🎓 **Tutorial-Outro** | 15 Sek | `Bau mir ein Outro mit Subscribe-Hinweis` |
-| 💰 **Sponsor-Read** | 20 Sek | `Sponsor-Read für [Marke] mit Logo` |
-| 📱 **Vertical Short** | 9:16 | `Mach das als Short für TikTok` |
-| 🎙️ **Podcast-Intro** | 15 Sek | `Podcast-Intro mit Waveform-Animation` |
-
----
-
-## ✨ Was dieses Addon besser macht
-
-- **🇩🇪 Komplett auf Deutsch** – Alle Befehle, Vorschläge und Untertitel
-- **🎨 Brand-Wizard** – Einmal einrichten, in jedem Video automatisch verwendet
-- **📦 Format-Templates** – Fertige Bausteine, kein Coding nötig
-- **🛡️ Idiotensicher** – Fehler werden automatisch erkannt und behoben
-- **🔄 Reset-Befehl** – Wenn was kaputt geht, einfach zurücksetzen
-- **🎁 100% kostenlos & Open Source**
+The installer downloads Puppeteer's Chromium (~150 MB, one-shot), installs the renderer dependencies, and runs a smoke render at the end.
 
 ---
 
-## 📚 Quickstart
+## 🌐 Multilingual helper
 
-Nach der Installation startet automatisch der **Brand-Wizard**. Du beantwortest 5 kurze Fragen:
+The Claude skill adapts to your language at runtime. Defaults:
 
-1. Wie heißt deine Marke?
-2. Welche Hauptfarbe? (z.B. `#FF5733` oder "weiß nicht" für Vorschläge)
-3. Welche Akzentfarbe?
-4. Welcher Font? (oder "weiß nicht")
-5. Logo-Datei? (Pfad oder skip)
+- `language: "auto"` (set in `~/.aivc-dach/brand.config.json`) – the helper detects the language from your first message and remembers it.
+- `language: "en" | "de" | "es" | …` – fixed.
 
-Danach merkt sich der Helper alles. Du sagst nur noch:
+You can switch at any time by saying:
 
-> *"Mach mir ein News-Intro über das neue Claude Opus Update"*
+> *"Switch to English"* · *"Auf Deutsch wechseln"* · *"Cambia a español"*
 
-Und bekommst ein fertiges Video in deinem Branding zurück.
+The repo content (code, docs, comments) is in **English**, but the helper output (questions, errors, hints) is in **your** language.
 
 ---
 
-## 🆘 Hilfe & Befehle
+## 🎯 What you can build
 
-| Befehl | Was er macht |
-|--------|-------------|
-| `Hyperframes Hilfe` | Zeigt alle verfügbaren Befehle |
-| `Hyperframes Reset` | Setzt das Addon zurück |
-| `Hyperframes Update` | Holt die neueste Version |
-| `Brand neu einrichten` | Startet den Wizard erneut |
-| `Zeig mir Beispiele` | Öffnet die Beispiel-Galerie |
+Six ready-made video formats, each one prompt away:
 
----
-
-## 🎓 Lerne mehr
-
-Du willst tiefer einsteigen? In der **Vibe Coding DACH Skool-Community** gibt es:
-
-- 🎥 Komplette Video-Kurse zu Hyperframes
-- 📁 Premium-Template-Pack (50+ Formate)
-- 💬 Community-Support auf Deutsch
-- 🚀 Live-Calls mit Workflow-Reviews
-
-👉 **[Jetzt Vibe Coding DACH beitreten](https://www.skool.com/[DEIN-LINK])**
+| Format | Length | Example prompt |
+|--------|--------|----------------|
+| 📰 **News Intro** | 10 s | `Make a news intro about Gemini 4` |
+| 🎯 **Promo Clip** | 30 s | `Create a promo clip for my product XY` |
+| 🎓 **Tutorial Outro** | 15 s | `Build me an outro with a subscribe reminder` |
+| 💰 **Sponsor Read** | 20 s | `Sponsor read for [brand] with logo` |
+| 📱 **Vertical Short** | 9:16 | `Make this as a TikTok short` |
+| 🎙️ **Podcast Intro** | 15 s | `Podcast intro with waveform animation` |
 
 ---
 
-## 🛠️ Voraussetzungen
+## ✨ What this addon does well
 
-Das Installationsskript prüft alles automatisch und installiert was fehlt:
-
-| Tool | Wird genutzt für |
-|---|---|
-| ✅ Claude Code | Die Skill-Integration & der „eine Befehl"-Workflow |
-| ✅ Node.js (≥ 18) | Den lokalen Renderer |
-| ✅ Python 3.11+ | Faster Whisper (optional, geplant für Subtitles in v1.2) |
-| ✅ ffmpeg | Frame-Sequenz → MP4-Encoding |
-| ✅ Git | Repo holen + Updates |
-| ⚙️ Puppeteer + Chromium | Wird automatisch via `npm install` gezogen (~150 MB einmalig) |
-
-**Unterstützte Systeme:** Windows 10/11, macOS, Linux
+- **🌐 Multilingual** – English, German, and any language Claude understands
+- **🛡️ Plug-and-play** – render right after install, the brand wizard is optional
+- **🎨 Brand wizard** – set it up once, used in every render
+- **📦 Format templates** – pre-built building blocks, no coding needed
+- **🔁 Reset command** – when something breaks, reset and start over
+- **🎁 100 % free & open source** (MIT)
 
 ---
 
-## 📄 Lizenz
+## 📚 Quickstart after install
 
-MIT – Mach damit was du willst. Wenn dir das Tool hilft, freuen wir uns über einen ⭐ auf GitHub und einen Besuch in unserer [Skool-Community](https://www.skool.com/[DEIN-LINK]).
+The helper is in **plug-and-play mode** by default:
+
+> *"Make a news intro about the new Claude Opus update"*
+
+… and you get a finished MP4 with sensible defaults. Want personal branding? Run the wizard whenever you like:
+
+> *"Set up brand"*
+
+Five short questions:
+
+1. Brand / channel name
+2. Primary color (`#FF5733` or `"don't know"` for suggestions)
+3. Accent color
+4. Heading font (or `"don't know"`)
+5. Logo path (or `skip`)
+
+That's it. Your config lives in `~/.aivc-dach/brand.config.json`.
+
+---
+
+## 🆘 Help & commands
+
+Recognized in any common language:
+
+| English | German | What it does |
+|---------|--------|--------------|
+| `AIVC help` | `AIVC Hilfe` | Show all commands |
+| `AIVC reset` | `AIVC zurücksetzen` | Reset the addon |
+| `AIVC update` | `AIVC aktualisieren` | `git pull` + reinstall renderer deps |
+| `Set up brand` | `Brand einrichten` | Run the wizard |
+| `Show examples` | `Beispiele zeigen` | Open the example gallery |
+| `Render preview` | `Vorschau anzeigen` | Render HTML only (no MP4) |
+
+---
+
+## 🎓 Community
+
+There is a **Vibe Coding DACH** community on Skool with workflow reviews, premium templates, and live calls. AIVC DACH is the open-source tool – Vibe Coding DACH is the community around it.
+
+👉 [Vibe Coding DACH on Skool](https://www.skool.com/[SKOOL-LINK])
+
+---
+
+## 🛠️ Requirements
+
+The installer checks everything automatically and tells you what to install:
+
+| Tool | What it's used for | Required? |
+|---|---|---|
+| Claude Code | The skill integration & "one prompt" workflow | ✅ |
+| Node.js (≥ 18) | The local renderer | ✅ |
+| Git | Cloning the repo + updates | ✅ |
+| ffmpeg | Encoding frames into an MP4 | ✅ (auto-fallback to `ffmpeg-static` if missing) |
+| Puppeteer + Chromium | Headless browser for frame capture | auto-installed via `npm install` (~150 MB once) |
+| Python 3.11+ | Faster Whisper (subtitle features, planned for v2.1) | optional |
+| Faster Whisper | Subtitles from audio (planned) | optional |
+
+**Supported systems:** Windows 10/11, macOS, Linux.
+
+---
+
+## 🩺 Troubleshooting
+
+Got problems? See **[TROUBLESHOOTING.md](./TROUBLESHOOTING.md)** for common fixes
+(Chromium download fails, ffmpeg missing, permission errors, render produces black video, …).
+
+---
+
+## 📄 License
+
+MIT – do whatever you want. If the tool helps you, a ⭐ on GitHub is appreciated.
 
 ---
 
 ## 🤝 Credits
 
-- **Inspiriert von** [Hyperframes](https://hyperframes.heygen.com) (HeyGen) – die Idee, Videos aus deklarativen Templates zu rendern. Dieses Addon baut **keinen** Hyperframes-Client, sondern einen eigenständigen lokalen Renderer mit ähnlicher Philosophie.
-- Inspiriert vom [RoboNuggets Helper](https://github.com/robonuggets/hyperframes-helper)
-- Renderer baut auf [Puppeteer](https://pptr.dev/) und [ffmpeg](https://ffmpeg.org/)
-- Gebaut mit ❤️ für die **Vibe Coding DACH** Community
+- **Inspired by** [Hyperframes](https://hyperframes.heygen.com) (HeyGen) – the idea of rendering videos from declarative templates. AIVC DACH is **not** a Hyperframes client; it's a standalone local renderer with a similar philosophy.
+- Inspired by the [RoboNuggets Helper](https://github.com/robonuggets/hyperframes-helper)
+- Renderer built on [Puppeteer](https://pptr.dev/) and [ffmpeg](https://ffmpeg.org/)
+- Owned and maintained by **ZELDOgiq & Media AI AT**
+- Community: **Vibe Coding DACH** ❤️

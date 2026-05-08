@@ -1,18 +1,18 @@
 {
   "id": "podcast-intro",
-  "name": "Podcast-Intro",
+  "name": "Podcast Intro",
   "duration": 15,
   "aspectRatio": "16:9",
-  "description": "Podcast-Intro mit animierter Waveform, Episoden-Titel und Host-Info",
+  "description": "Podcast intro with animated waveform, episode title and host info",
   "scenes": [
-    {"id": 1, "from": 0, "to": 3, "name": "Waveform-Reveal", "description": "Animierte Waveform fadet ein"},
-    {"id": 2, "from": 3, "to": 10, "name": "Podcast-Info", "description": "Folgen-Badge + Podcast-Name + Episoden-Titel"},
-    {"id": 3, "from": 10, "to": 15, "name": "Host-Info", "description": "Host-Name + Folge"}
+    {"id": 1, "from": 0, "to": 3, "name": "Waveform reveal", "description": "Animated waveform fades in"},
+    {"id": 2, "from": 3, "to": 10, "name": "Podcast info", "description": "Episode badge + podcast name + episode title"},
+    {"id": 3, "from": 10, "to": 15, "name": "Host info", "description": "Host name + episode number"}
   ],
   "variables": [
-    {"key": "PODCAST_NAME", "label": "Podcast-Name", "required": true, "example": "Vibe Coding DACH", "maxLength": 30},
-    {"key": "EPISODE_TITLE", "label": "Episoden-Titel", "required": true, "example": "Hyperframes für Anfänger", "maxLength": 60},
-    {"key": "HOST_NAME", "label": "Host-Name", "required": true, "example": "Max Mustermann", "maxLength": 25},
-    {"key": "EPISODE_NUMBER", "label": "Folge-Nummer", "required": true, "example": "42", "maxLength": 5}
+    {"key": "PODCAST_NAME", "label": "Podcast name", "required": true, "example": "AIVC DACH Cast", "maxLength": 30},
+    {"key": "EPISODE_TITLE", "label": "Episode title", "required": true, "example": "Local rendering for everyone", "maxLength": 60},
+    {"key": "HOST_NAME", "label": "Host name", "required": true, "example": "Jane Doe", "maxLength": 25},
+    {"key": "EPISODE_NUMBER", "label": "Episode number", "required": true, "example": "42", "maxLength": 5}
   ]
 }

@@ -1,20 +1,20 @@
 {
   "id": "sponsor-read",
-  "name": "Sponsor-Read",
+  "name": "Sponsor Read",
   "duration": 20,
   "aspectRatio": "16:9",
-  "description": "Werbepartner-Einblendung mit Logo, Pitch und Promo-Code",
+  "description": "Sponsor read with logo, pitch and promo code",
   "scenes": [
-    {"id": 1, "from": 0, "to": 3, "name": "Logo-Reveal", "description": "Sponsor-Logo + Name"},
-    {"id": 2, "from": 3, "to": 15, "name": "Brand-Card", "description": "2-Zeilen-Pitch"},
-    {"id": 3, "from": 15, "to": 20, "name": "Promo", "description": "Promo-Code + Link"}
+    {"id": 1, "from": 0, "to": 3, "name": "Logo reveal", "description": "Sponsor logo + name"},
+    {"id": 2, "from": 3, "to": 15, "name": "Brand card", "description": "Two-line pitch"},
+    {"id": 3, "from": 15, "to": 20, "name": "Promo", "description": "Promo code + link"}
   ],
   "variables": [
-    {"key": "SPONSOR_NAME", "label": "Name des Sponsors", "required": true, "example": "Acme Corp", "maxLength": 30},
-    {"key": "SPONSOR_LOGO", "label": "Pfad zum Sponsor-Logo", "required": false, "example": "/path/to/logo.png"},
-    {"key": "PITCH_LINE_1", "label": "Pitch Zeile 1", "required": true, "example": "Schluss mit langweiligen Tools.", "maxLength": 50},
-    {"key": "PITCH_LINE_2", "label": "Pitch Zeile 2", "required": true, "example": "Acme bringt deine Arbeit auf das nächste Level.", "maxLength": 60},
-    {"key": "PROMO_CODE", "label": "Promo-Code", "required": false, "example": "VIBECODING20", "maxLength": 20},
-    {"key": "LINK", "label": "Link / URL", "required": true, "example": "acme.com/vibe", "maxLength": 40}
+    {"key": "SPONSOR_NAME", "label": "Sponsor name", "required": true, "example": "Acme Corp", "maxLength": 30},
+    {"key": "SPONSOR_LOGO", "label": "Path to sponsor logo", "required": false, "example": "/path/to/logo.png"},
+    {"key": "PITCH_LINE_1", "label": "Pitch line 1", "required": true, "example": "Tired of clunky tools.", "maxLength": 50},
+    {"key": "PITCH_LINE_2", "label": "Pitch line 2", "required": true, "example": "Acme takes your work to the next level.", "maxLength": 60},
+    {"key": "PROMO_CODE", "label": "Promo code", "required": false, "example": "AIVC20", "maxLength": 20},
+    {"key": "LINK", "label": "Link / URL", "required": true, "example": "acme.com/aivc", "maxLength": 40}
   ]
 }
