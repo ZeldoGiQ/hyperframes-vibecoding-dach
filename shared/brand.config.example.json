@@ -17,7 +17,7 @@
     "subtitlesEnabled": false,
     "subtitlesLanguage": "auto",
     "defaultAspectRatio": "16:9",
-    "outputDirectory": "./output"
+    "outputDirectory": "./generator/output"
   },
   "setupComplete": false
 }
