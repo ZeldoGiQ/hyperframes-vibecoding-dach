@@ -4,6 +4,43 @@ All notable changes to AIVC DACH.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## v3.0.0-alpha.1 – 2026-05-08 · Foundation (editor + generator + MCP skeleton)
+
+**This is a foundation release**, not a feature release. The actual AI layer + editor wiring lands in v3.0.0-alpha.2 onwards.
+
+### Added
+- **`editor/`** — fork of [OpenCut](https://github.com/OpenCut-app/OpenCut) (MIT, Next.js + Bun). Removed `apps/desktop/`, `rust/` and `Cargo.*` (web-only for now). Minimal AIVC DACH branding: title, primary color (neon green `hsl(155, 100%, 50%)`), accent color (violet `hsl(273, 68%, 59%)`), dark default theme.
+- **`generator/`** — v2.0.0 code moved from repo root. All paths in `render.js`, `install.sh`, `install.bat`, `smoke-test.py` updated to the new layout. Smoke test green at the new path. Real render test green.
+- **`mcp-server/`** — stdio MCP server, Hello-World skeleton. `ping` tool live; `editor.cut`, `editor.trim`, `editor.addClip`, `generator.render` are stubs. End-to-end smoke test (`bun run smoke` → `pong`) green.
+- **`shared/`** — brand config example + TypeScript types (`shared/types/brand-config.ts`) shared by editor, generator and mcp-server.
+- Top-level **`package.json`** with orchestration scripts: `dev:editor`, `dev:mcp`, `render`, `smoke`.
+- **`NOTICE.md`** — third-party attributions (OpenCut, Vercel AI SDK, MCP SDK, Puppeteer, ffmpeg-static, Inter font).
+- `editor/apps/web/.env.example` / `.env.local` for local dev (dummy values).
+- Bun 1.3.13 added as a system dependency for the editor + mcp-server.
+
+### Changed
+- Generator install command: `scripts/install.sh` → `generator/scripts/install.sh` (and `.bat`).
+- Generator renderer command: `node renderer/render.js` → `node generator/renderer/render.js`.
+- `brand.config.example.json` moved from repo root to `shared/brand.config.example.json`.
+- `templates/`, `templates.json`, `examples/` moved into `generator/`.
+- README rewritten as a tri-module overview (editor + generator + mcp-server).
+- `.gitignore` extended for editor (`node_modules/`, `.next/`, `.env.local`, `.turbo/`, `.wrangler/`) and mcp-server (`node_modules/`, `bun.lockb`).
+
+### License
+- Stays **MIT**. OpenCut is also MIT — no copyleft inheritance. The full OpenCut license is preserved at `editor/LICENSE`. Top-level `LICENSE` covers the rest of the repo.
+- AGPL was considered but rejected (no obligation to switch; MIT keeps the door open for dual-licensing later).
+
+### Migration from v2.0.0
+- v2.0.0 still works at the [v2.0.0 tag](https://github.com/ZeldoGiQ/aivc-dach/releases/tag/v2.0.0).
+- Brand config path (`~/.aivc-dach/brand.config.json`) is unchanged — no user-data migration needed.
+- If you script against the renderer: update the path from `renderer/render.js` to `generator/renderer/render.js`.
+
+### Tests (all green before PR)
+1. Editor: `bun install` → 1933 packages in 65 s · `bun run dev:web` → Ready in 1.6 s · HTTP 200 + `<title>AIVC DACH</title>`.
+2. Generator (new path): `python generator/scripts/smoke-test.py` → 0 errors, 0 warnings.
+3. Generator real render (new path): `node generator/renderer/render.js --template news-intro` → 30.5 s capture, valid MP4.
+4. MCP server: `bun run smoke` → `pong from aivc-dach v0.1.0-alpha — server is live`.
+
 ## v2.0.0 – 2026-05-08 · AIVC DACH (rebrand & multilingual)
 
 **Breaking changes.** This is a full rebrand of the project from "Hyperframes Addon by Vibe Coding DACH" to **AIVC DACH by ZELDOgiq & Media AI AT**.

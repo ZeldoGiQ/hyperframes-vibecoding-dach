@@ -1,0 +1,23 @@
+{
+  "version": "2.0",
+  "brand": {
+    "name": "My Brand",
+    "primaryColor": "#0EA5E9",
+    "accentColor": "#F59E0B",
+    "backgroundColor": "#0A0A0A",
+    "textColor": "#FFFFFF",
+    "fontHeading": "Inter",
+    "fontBody": "Inter",
+    "fontMono": "JetBrains Mono",
+    "logoPath": null,
+    "logoPosition": "top-left"
+  },
+  "preferences": {
+    "language": "auto",
+    "subtitlesEnabled": false,
+    "subtitlesLanguage": "auto",
+    "defaultAspectRatio": "16:9",
+    "outputDirectory": "./generator/output"
+  },
+  "setupComplete": false
+}

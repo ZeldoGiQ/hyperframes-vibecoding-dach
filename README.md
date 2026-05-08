@@ -1,148 +1,159 @@
 # 🎬 AIVC DACH
 
-**Create professional videos with Claude Code – fully local, in minutes instead of hours.**
+**AI-first video editor + generator in one repo.** Tell Claude what you want, get an MP4 back. Open source, fully local, no accounts, no API keys for the renderer.
 
 > by **ZELDOgiq & Media AI AT**
+> Status: **v3.0.0-alpha.1 (foundation)** · v2.0.0 generator-only release is still live and supported
 
-A standalone video renderer for non-technical users. The repo ships with 6 production-ready format templates, a brand wizard, and a Claude Code skill that adapts to your language. The renderer is **fully local** – Puppeteer + ffmpeg under the hood, no cloud account, no API key, no upload of your data.
+```
+aivc-dach/
+├── editor/        # AI-driven video editor — fork of OpenCut (Next.js + Bun)
+├── generator/     # HTML/CSS templates → MP4 (Puppeteer + ffmpeg) — formerly v2.0.0
+├── mcp-server/    # Model Context Protocol stdio server, exposes editor + generator tools to AI agents
+└── shared/        # brand config + TypeScript types shared across modules
+```
 
 ---
 
-## 🚀 Lazy Mode – install in 30 seconds
+## ✨ Vision
 
-**1. Open Claude Code in any empty folder.**
+A single tool that lets non-technical creators:
 
-**2. Paste this single command:**
+1. **Generate** ready-to-use intros, outros, shorts and sponsor reads from a one-line prompt (the v2.0.0 workflow).
+2. **Edit** raw footage with AI assistance — the editor's chat sidebar can cut, trim, add clips, drop a generated intro on the timeline, all via the **MCP server**.
+3. **Mix providers**: Claude (default), OpenAI or local Ollama via the Vercel AI SDK. BYOLLM.
 
-```
-Install AIVC DACH from
-https://github.com/ZeldoGiQ/aivc-dach
-and run the full setup.
-```
-
-**3. Done.** Claude installs everything, runs a test render and you're ready to go. The brand wizard is **optional** – the renderer works out of the box with sensible defaults.
-
-After installation just say things like:
-
-> *"Make a news intro about the new Claude Opus update"*
-
-The helper picks the right template, asks only for what's missing, and renders an MP4.
+This `v3.0.0-alpha.1` release is the **foundation**: branch + OpenCut fork + generator move + MCP skeleton. The actual AI integration (chat sidebar wired to MCP, drag-and-drop templates, bidirectional state sync) lands in subsequent v3.0.0-alpha.x and the v3.0.0 stable release.
 
 ---
 
-## 🧠 Manual Mode – for devs
+## 🚦 Status of each module (alpha.1)
+
+| Module | What works today | What's coming |
+|---|---|---|
+| `editor/` | OpenCut fork builds & runs (`bun run dev:web` → http://localhost:3000), AIVC DACH branding (title, primary/accent colors, dark default) | Full branding pass, AI chat sidebar, MCP wiring, template drag-and-drop |
+| `generator/` | All v2.0.0 features (6 templates, renderer, install scripts, smoke test) work unchanged at the new path | None planned — feature-complete for now |
+| `mcp-server/` | stdio server, `ping` tool live, 4 stub tools defined for editor + generator | Real implementations: `editor.cut`, `editor.trim`, `editor.addClip`, `generator.render` |
+| `shared/` | brand config + TypeScript types | Templates manifest (Phase 5) |
+
+---
+
+## 🚀 Quickstart per module
+
+### Generator (works today, identical to v2.0.0)
 
 ```bash
 git clone https://github.com/ZeldoGiQ/aivc-dach
 cd aivc-dach
-./scripts/install.sh         # macOS / Linux
+generator/scripts/install.sh         # macOS / Linux
 # or:
-scripts\install.bat          # Windows
+generator\scripts\install.bat        # Windows
 ```
 
-The installer downloads Puppeteer's Chromium (~150 MB, one-shot), installs the renderer dependencies, and runs a smoke render at the end.
+Then in Claude Code:
+
+```
+Make a news intro about Gemini 4 with subtitle "Google's new AI model"
+```
+
+Output: `output/news-intro-<timestamp>.mp4`.
+
+### Editor (foundation, dev-server only)
+
+```bash
+cd editor
+bun install
+cp apps/web/.env.example apps/web/.env.local   # dummy values are fine for local UI work
+bun run dev:web                                # opens http://localhost:3000
+```
+
+> Note: the editor inherits OpenCut's auth, DB and CMS dependencies. The dummy values in `.env.local` are enough to load the page; cloud calls fail gracefully. Real production secrets land in v3.0.0.
+
+### MCP server (stdio)
+
+```bash
+cd mcp-server
+bun install
+bun run smoke            # initialize → tools/list → ping → expects "pong"
+```
+
+To wire into Claude Code, add to `~/.claude/config.json`:
+
+```json
+{
+  "mcpServers": {
+    "aivc-dach": {
+      "command": "bun",
+      "args": ["run", "/abs/path/to/aivc-dach/mcp-server/server.ts"]
+    }
+  }
+}
+```
 
 ---
 
-## 🌐 Multilingual helper
+## 🔁 Migration from v2.0.0
 
-The Claude skill adapts to your language at runtime. Defaults:
+If you're running v2.0.0 today: **nothing breaks immediately**. v2.0.0 lives at the [`v2.0.0` tag](https://github.com/ZeldoGiQ/aivc-dach/releases/tag/v2.0.0) and on the `main` branch until v3.0.0 stable replaces it.
 
-- `language: "auto"` (set in `~/.aivc-dach/brand.config.json`) – the helper detects the language from your first message and remembers it.
-- `language: "en" | "de" | "es" | …` – fixed.
-
-You can switch at any time by saying:
-
-> *"Switch to English"* · *"Auf Deutsch wechseln"* · *"Cambia a español"*
-
-The repo content (code, docs, comments) is in **English**, but the helper output (questions, errors, hints) is in **your** language.
+What changes in v3.0.0:
+- Generator moved from repo root to `generator/`. The renderer command is now `node generator/renderer/render.js` (instead of `node renderer/render.js`).
+- `brand.config.example.json` moved from repo root to `shared/`.
+- New `editor/` and `mcp-server/` modules.
+- Top-level scripts orchestrate all modules: `bun run dev:editor`, `bun run smoke`, `bun run render`.
+- Brand config path (`~/.aivc-dach/brand.config.json`) is **unchanged**. No user-data migration needed.
 
 ---
 
-## 🎯 What you can build
+## 🧪 Smoke tests
 
-Six ready-made video formats, each one prompt away:
+```bash
+bun run smoke              # generator (Python) + mcp-server (Bun)
+bun run smoke:generator    # just the v2.0.0 templates / renderer check
+bun run smoke:mcp          # just the MCP stdio dance
+```
 
-| Format | Length | Example prompt |
-|--------|--------|----------------|
-| 📰 **News Intro** | 10 s | `Make a news intro about Gemini 4` |
-| 🎯 **Promo Clip** | 30 s | `Create a promo clip for my product XY` |
-| 🎓 **Tutorial Outro** | 15 s | `Build me an outro with a subscribe reminder` |
-| 💰 **Sponsor Read** | 20 s | `Sponsor read for [brand] with logo` |
-| 📱 **Vertical Short** | 9:16 | `Make this as a TikTok short` |
-| 🎙️ **Podcast Intro** | 15 s | `Podcast intro with waveform animation` |
+Both are green for v3.0.0-alpha.1. The editor doesn't have a CI smoke yet — that's part of v3.0.0.
 
 ---
 
-## ✨ What this addon does well
+## 🗺️ Roadmap
 
-- **🌐 Multilingual** – English, German, and any language Claude understands
-- **🛡️ Plug-and-play** – render right after install, the brand wizard is optional
-- **🎨 Brand wizard** – set it up once, used in every render
-- **📦 Format templates** – pre-built building blocks, no coding needed
-- **🔁 Reset command** – when something breaks, reset and start over
-- **🎁 100 % free & open source** (MIT)
-
----
-
-## 📚 Quickstart after install
-
-The helper is in **plug-and-play mode** by default:
-
-> *"Make a news intro about the new Claude Opus update"*
-
-… and you get a finished MP4 with sensible defaults. Want personal branding? Run the wizard whenever you like:
-
-> *"Set up brand"*
-
-Five short questions:
-
-1. Brand / channel name
-2. Primary color (`#FF5733` or `"don't know"` for suggestions)
-3. Accent color
-4. Heading font (or `"don't know"`)
-5. Logo path (or `skip`)
-
-That's it. Your config lives in `~/.aivc-dach/brand.config.json`.
+| Version | Phase | Scope |
+|---|---|---|
+| **v3.0.0-alpha.1** | Foundation (this PR) | Branch + OpenCut fork + generator move + MCP skeleton |
+| v3.0.0-alpha.2 | AI layer | Vercel AI SDK + Anthropic / OpenAI / Ollama providers, chat sidebar shell |
+| v3.0.0-alpha.3 | MCP wiring | `editor.cut`, `editor.trim`, `editor.addClip` connect to OpenCut's Zustand store |
+| v3.0.0-alpha.4 | Templates → editor | Drag-and-drop generator templates onto the timeline, live render preview |
+| v3.0.0-alpha.5 | State sync | Bidirectional: chat ↔ timeline live updates |
+| **v3.0.0** | Stable | Full branding pass, real production env, end-to-end smoke (footage → cut → drop intro → export) |
+| v3.1.0 | Polish | Native AIVC logo, custom Inter weights, tutorial videos |
 
 ---
 
-## 🆘 Help & commands
+## 🆘 Help
 
-Recognized in any common language:
-
-| English | German | What it does |
-|---------|--------|--------------|
-| `AIVC help` | `AIVC Hilfe` | Show all commands |
-| `AIVC reset` | `AIVC zurücksetzen` | Reset the addon |
-| `AIVC update` | `AIVC aktualisieren` | `git pull` + reinstall renderer deps |
-| `Set up brand` | `Brand einrichten` | Run the wizard |
-| `Show examples` | `Beispiele zeigen` | Open the example gallery |
-| `Render preview` | `Vorschau anzeigen` | Render HTML only (no MP4) |
-
----
-
-## 🎓 Community
-
-Join the **[Vibe Coding DACH](https://www.skool.com/vibe-coding-dach) Skool community** for German-speaking creators – courses, premium templates, and live workflow reviews. AIVC DACH is the open-source tool – Vibe Coding DACH is the community around it.
-
-👉 [vibe-coding-dach on Skool](https://www.skool.com/vibe-coding-dach)
+| Command | What it does |
+|---|---|
+| `AIVC help` | Show all commands |
+| `AIVC reset` | Reset the brand config (`generator/scripts/reset.*`) |
+| `AIVC update` | `git pull` + reinstall renderer / editor / mcp-server deps |
+| `Set up brand` | Run the (optional) brand wizard |
+| `Make a <format>` | Render a generator template (works today) |
+| `Open editor` | Start the editor dev-server (works today, no AI yet) |
 
 ---
 
 ## 🛠️ Requirements
 
-The installer checks everything automatically and tells you what to install:
-
-| Tool | What it's used for | Required? |
+| Tool | Used for | Required? |
 |---|---|---|
-| Claude Code | The skill integration & "one prompt" workflow | ✅ |
-| Node.js (≥ 18) | The local renderer | ✅ |
-| Git | Cloning the repo + updates | ✅ |
-| ffmpeg | Encoding frames into an MP4 | ✅ (auto-fallback to `ffmpeg-static` if missing) |
-| Puppeteer + Chromium | Headless browser for frame capture | auto-installed via `npm install` (~150 MB once) |
-| Python 3.11+ | Faster Whisper (subtitle features, planned for v2.1) | optional |
-| Faster Whisper | Subtitles from audio (planned) | optional |
+| Claude Code | Skill integration & "one prompt" workflow | ✅ |
+| Node.js (≥ 18) | Generator renderer (Puppeteer + ffmpeg) | ✅ |
+| Bun (≥ 1.2) | Editor (OpenCut fork) + MCP server | ✅ |
+| Git | Repo cloning + updates | ✅ |
+| ffmpeg | Frame encoding (auto-fallback to `ffmpeg-static`) | optional |
+| Python 3.11+ | Faster Whisper subtitles (planned) | optional |
 
 **Supported systems:** Windows 10/11, macOS, Linux.
 
@@ -150,21 +161,23 @@ The installer checks everything automatically and tells you what to install:
 
 ## 🩺 Troubleshooting
 
-Got problems? See **[TROUBLESHOOTING.md](./TROUBLESHOOTING.md)** for common fixes
-(Chromium download fails, ffmpeg missing, permission errors, render produces black video, …).
+See [`TROUBLESHOOTING.md`](./TROUBLESHOOTING.md) for the 7 most common issues (Chromium download, ffmpeg, permissions, …). Editor-specific issues (env vars, OpenCut deps) will be added in v3.0.0.
 
 ---
 
 ## 📄 License
 
-MIT – do whatever you want. If the tool helps you, a ⭐ on GitHub is appreciated.
+MIT — see [`LICENSE`](./LICENSE). Third-party attributions in [`NOTICE.md`](./NOTICE.md).
+
+The editor under `editor/` is a fork of [OpenCut](https://github.com/OpenCut-app/OpenCut) (also MIT). OpenCut's full license text is preserved at [`editor/LICENSE`](./editor/LICENSE).
 
 ---
 
 ## 🤝 Credits
 
-- **Inspired by** [Hyperframes](https://hyperframes.heygen.com) (HeyGen) – the idea of rendering videos from declarative templates. AIVC DACH is **not** a Hyperframes client; it's a standalone local renderer with a similar philosophy.
-- Inspired by the [RoboNuggets Helper](https://github.com/robonuggets/hyperframes-helper)
-- Renderer built on [Puppeteer](https://pptr.dev/) and [ffmpeg](https://ffmpeg.org/)
-- Owned and maintained by **ZELDOgiq & Media AI AT**
-- Community: **Vibe Coding DACH** ❤️
+- **Owned and maintained by** ZELDOgiq & Media AI AT
+- **Editor foundation:** [OpenCut](https://github.com/OpenCut-app/OpenCut) (MIT)
+- **Generator:** Puppeteer + ffmpeg, six templates inspired by Hyperframes-style workflows
+- **MCP server:** Built on [@modelcontextprotocol/sdk](https://github.com/modelcontextprotocol/typescript-sdk)
+- **AI layer (planned):** [Vercel AI SDK](https://github.com/vercel/ai) — Anthropic / OpenAI / Ollama providers
+- **Community:** [Vibe Coding DACH](https://www.skool.com/vibe-coding-dach) Skool (German-speaking creators — courses, premium templates, live workflow reviews)

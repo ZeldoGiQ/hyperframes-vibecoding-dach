@@ -1,0 +1,26 @@
+{
+  "name": "aivc-dach",
+  "version": "3.0.0-alpha.1",
+  "private": true,
+  "description": "AI-first video editor + generator in one repo. Editor (OpenCut fork, Next.js + Bun), generator (HTML/CSS templates → MP4 via Puppeteer + ffmpeg), MCP server (Anthropic / OpenAI / Ollama via Vercel AI SDK).",
+  "scripts": {
+    "install:all": "cd editor && bun install && cd ../generator/renderer && npm install && cd ../../mcp-server && bun install",
+    "dev:editor": "cd editor && bun run dev:web",
+    "dev:mcp": "cd mcp-server && bun run dev",
+    "render": "node generator/renderer/render.js",
+    "smoke:generator": "PYTHONIOENCODING=utf-8 python -X utf8 generator/scripts/smoke-test.py",
+    "smoke:mcp": "cd mcp-server && bun run smoke",
+    "smoke": "bun run smoke:generator && bun run smoke:mcp"
+  },
+  "engines": {
+    "bun": ">=1.2.0",
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "author": "ZELDOgiq & Media AI AT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ZeldoGiQ/aivc-dach.git"
+  },
+  "homepage": "https://github.com/ZeldoGiQ/aivc-dach"
+}

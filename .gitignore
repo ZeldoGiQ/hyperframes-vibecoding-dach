@@ -1,5 +1,6 @@
 # Output and render files
 output/
+generator/output/
 *.mp4
 *.mov
 *.webm
@@ -7,13 +8,14 @@ output/
 
 # Test artefacts
 examples/*.html
+generator/examples/*.html
 
 # User-specific configs (must not be committed)
 brand.config.json
 .aivc-dach/
 .hyperframes-vbc/
 
-# Node
+# Node / Bun
 node_modules/
 npm-debug.log*
 yarn-debug.log*
@@ -21,6 +23,24 @@ yarn-error.log*
 renderer/node_modules/
 renderer/tmp/
 renderer/package-lock.json
+generator/renderer/node_modules/
+generator/renderer/tmp/
+generator/renderer/package-lock.json
+mcp-server/node_modules/
+mcp-server/bun.lockb
+
+# Editor (Next.js + Bun, OpenCut fork)
+editor/node_modules/
+editor/.next/
+editor/apps/*/node_modules/
+editor/apps/*/.next/
+editor/apps/*/.open-next/
+editor/apps/*/.env.local
+editor/apps/*/.turbo/
+editor/apps/*/.content-collections/
+editor/apps/*/.font-cache/
+editor/.turbo/
+editor/.wrangler/
 
 # Python
 __pycache__/

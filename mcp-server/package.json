@@ -1,0 +1,29 @@
+{
+  "name": "aivc-dach-mcp-server",
+  "version": "0.1.0-alpha",
+  "description": "MCP server (stdio) that exposes AIVC DACH editor + generator tools to AI agents (Claude Code, Cursor, …). Phase 4-skeleton in v3.0.0-alpha — real tools land in v3.0.0.",
+  "type": "module",
+  "main": "server.ts",
+  "bin": {
+    "aivc-dach-mcp": "server.ts"
+  },
+  "scripts": {
+    "start": "bun run server.ts",
+    "dev": "bun --watch server.ts",
+    "smoke": "bun run smoke.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "engines": {
+    "bun": ">=1.2.0",
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "author": "ZELDOgiq & Media AI AT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ZeldoGiQ/aivc-dach.git"
+  }
+}
