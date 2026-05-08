@@ -19,21 +19,84 @@ export function ChatSidebar() {
 	const [submitError, setSubmitError] = useState<string | null>(null);
 	const scrollRef = useRef<HTMLDivElement | null>(null);
 
-	const { messages, sendMessage, status, addToolResult, error } = useChat({
+	const { messages, sendMessage, status, addToolOutput, error } = useChat({
 		transport: new DefaultChatTransport({ api: "/api/ai/chat" }),
 		sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
-		onToolCall: async ({ toolCall }) => {
-			const result = executeEditorTool({
+		onToolCall: ({ toolCall }) => {
+			console.log("[ai] onToolCall fired", {
 				toolName: toolCall.toolName,
-				args: toolCall.input,
-			});
-			await addToolResult({
-				tool: toolCall.toolName,
 				toolCallId: toolCall.toolCallId,
-				output: result,
+				input: toolCall.input,
 			});
+			let result: ReturnType<typeof executeEditorTool>;
+			try {
+				result = executeEditorTool({
+					toolName: toolCall.toolName,
+					args: toolCall.input,
+				});
+				console.log(
+					"[ai] tool result",
+					toolCall.toolName,
+					"ok=",
+					result.ok,
+				);
+			} catch (err) {
+				console.error("[ai] tool call threw", toolCall.toolName, err);
+				result = {
+					ok: false,
+					error: err instanceof Error ? err.message : String(err),
+				};
+			}
+			let safeOutput: unknown;
+			try {
+				safeOutput = JSON.parse(JSON.stringify(result));
+			} catch (err) {
+				console.error("[ai] result not JSON-serializable", err);
+				safeOutput = {
+					ok: false,
+					error: "tool result was not JSON-serializable",
+				};
+			}
+
+			console.log("[ai] calling addToolOutput", toolCall.toolCallId);
+			const isError =
+				typeof safeOutput === "object" &&
+				safeOutput !== null &&
+				"ok" in safeOutput &&
+				(safeOutput as { ok: unknown }).ok === false;
+
+			const addPromise = isError
+				? addToolOutput({
+						tool: toolCall.toolName,
+						toolCallId: toolCall.toolCallId,
+						state: "output-error",
+						errorText:
+							(safeOutput as { error?: string }).error ?? "tool failed",
+					})
+				: addToolOutput({
+						tool: toolCall.toolName,
+						toolCallId: toolCall.toolCallId,
+						output: safeOutput,
+					});
+
+			Promise.resolve(addPromise)
+				.then(() => {
+					console.log(
+						"[ai] addToolOutput resolved for",
+						toolCall.toolCallId,
+					);
+				})
+				.catch((err: unknown) => {
+					console.error("[ai] addToolOutput rejected", err);
+				});
+
+			console.log(
+				"[ai] onToolCall returning (not awaiting addToolOutput) for",
+				toolCall.toolCallId,
+			);
 		},
 		onError: (err) => {
+			console.error("[ai] chat error", err);
 			setSubmitError(err.message ?? "Chat request failed.");
 		},
 	});

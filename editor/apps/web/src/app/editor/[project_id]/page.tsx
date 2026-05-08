@@ -52,15 +52,15 @@ export default function Editor() {
 						<div className="min-h-0 min-w-0 flex-1 relative">
 							<EditorLayout />
 							{!chatOpen && (
-								<Button
-									variant="default"
-									size="icon"
-									className="absolute right-3 top-3 z-10 shadow-md"
+								<button
+									type="button"
+									className="absolute right-4 top-4 z-50 flex items-center gap-2 rounded-full bg-[#00FF94] px-4 py-2 text-sm font-semibold text-black shadow-lg shadow-[#00FF94]/30 ring-1 ring-black/10 transition hover:bg-[#22FFA8] hover:shadow-xl"
 									onClick={() => setChatOpen(true)}
 									aria-label="Open AI assistant"
 								>
-									<Bot className="size-4" />
-								</Button>
+									<Bot className="size-5" />
+									<span>AI Chat</span>
+								</button>
 							)}
 						</div>
 						{chatOpen && (
