@@ -1,18 +1,18 @@
 {
   "id": "tutorial-outro",
-  "name": "Tutorial-Outro",
+  "name": "Tutorial Outro",
   "duration": 15,
   "aspectRatio": "16:9",
-  "description": "Outro für Tutorials mit Recap, Subscribe-Reminder und Vorschau aufs nächste Video",
+  "description": "Tutorial outro with recap, subscribe reminder and next-video preview",
   "scenes": [
-    {"id": 1, "from": 0, "to": 5, "name": "Recap", "description": "3 wichtigste Lernpunkte mit Häkchen"},
-    {"id": 2, "from": 5, "to": 10, "name": "Subscribe", "description": "Abo-Button mit Bounce-Animation"},
-    {"id": 3, "from": 10, "to": 15, "name": "Next Video", "description": "Vorschau aufs nächste Video"}
+    {"id": 1, "from": 0, "to": 5, "name": "Recap", "description": "3 key learnings with check marks"},
+    {"id": 2, "from": 5, "to": 10, "name": "Subscribe", "description": "Subscribe button with bounce animation"},
+    {"id": 3, "from": 10, "to": 15, "name": "Next video", "description": "Preview of the next tutorial"}
   ],
   "variables": [
-    {"key": "RECAP_1", "label": "1. Lernpunkt", "required": true, "example": "Hyperframes installieren", "maxLength": 50},
-    {"key": "RECAP_2", "label": "2. Lernpunkt", "required": true, "example": "Brand-Wizard nutzen", "maxLength": 50},
-    {"key": "RECAP_3", "label": "3. Lernpunkt", "required": true, "example": "Erstes Video rendern", "maxLength": 50},
-    {"key": "NEXT_VIDEO", "label": "Titel des nächsten Videos", "required": true, "example": "Eigene Templates bauen", "maxLength": 60}
+    {"key": "RECAP_1", "label": "Learning #1", "required": true, "example": "Install AIVC DACH", "maxLength": 50},
+    {"key": "RECAP_2", "label": "Learning #2", "required": true, "example": "Use the brand wizard", "maxLength": 50},
+    {"key": "RECAP_3", "label": "Learning #3", "required": true, "example": "Render your first video", "maxLength": 50},
+    {"key": "NEXT_VIDEO", "label": "Title of the next video", "required": true, "example": "Build your own templates", "maxLength": 60}
   ]
 }

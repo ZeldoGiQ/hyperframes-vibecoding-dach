@@ -1,45 +1,45 @@
 #!/bin/bash
-# Reset-Skript für Hyperframes Addon by Vibe Coding DACH
+# Reset script for AIVC DACH
 
 set -e
 
-CONFIG_DIR="$HOME/.hyperframes-vbc"
-INSTALL_DIR="$HOME/hyperframes-vbc"
+CONFIG_DIR="$HOME/.aivc-dach"
 
 echo ""
-echo "🔄 Hyperframes Addon Reset"
+echo "🔄 AIVC DACH Reset"
 echo ""
-echo "Folgende Daten werden gelöscht:"
-echo "  - Brand-Konfiguration ($CONFIG_DIR/brand.config.json)"
-echo "  - Cache und temporäre Dateien"
+echo "The following will be deleted:"
+echo "  - Brand config ($CONFIG_DIR/brand.config.json)"
+echo "  - Cache and temporary files"
 echo ""
-echo "NICHT gelöscht werden:"
-echo "  - Hyperframes selbst"
-echo "  - Deine Logos in $CONFIG_DIR/assets/"
-echo "  - Fertige Videos im output/-Ordner"
+echo "Will NOT be deleted:"
+echo "  - Renderer install (renderer/node_modules/)"
+echo "  - Your logos in $CONFIG_DIR/assets/"
+echo "  - Rendered videos in output/"
+echo "  - Legacy config in ~/.hyperframes-vbc/ (left untouched)"
 echo ""
-read -p "Wirklich zurücksetzen? (j/N): " confirm
+read -p "Really reset? (y/N): " confirm
 
-if [[ ! $confirm =~ ^[JjYy]$ ]]; then
-    echo "❌ Reset abgebrochen."
-    exit 0
-fi
+case "$confirm" in
+    [Yy]|[Yy][Ee][Ss]) ;;
+    *) echo "❌ Reset cancelled."; exit 0 ;;
+esac
 
-# Backup der Brand-Config (für den Fall der Fälle)
+# Backup brand config (just in case)
 if [ -f "$CONFIG_DIR/brand.config.json" ]; then
     cp "$CONFIG_DIR/brand.config.json" "$CONFIG_DIR/brand.config.backup.json"
-    echo "✅ Backup unter brand.config.backup.json gespeichert"
+    echo "✅ Backup saved to brand.config.backup.json"
 fi
 
-# Lösche Config (aber nicht Assets)
+# Delete config (but not assets)
 rm -f "$CONFIG_DIR/brand.config.json"
 
-# Cache leeren
+# Clear cache
 rm -rf "$CONFIG_DIR/cache"
 
 echo ""
-echo "✅ Reset erfolgreich!"
+echo "✅ Reset complete!"
 echo ""
-echo "Starte den Brand-Wizard mit:"
-echo "  Sag Claude Code: \"Starte den Brand-Wizard\""
+echo "Set up again by telling Claude Code:"
+echo "  \"Set up brand\""
 echo ""

@@ -1,26 +1,26 @@
 # Renderer
 
-Lokaler Video-Renderer für das **Hyperframes Addon by Vibe Coding DACH**.
+Local video renderer for **AIVC DACH**.
 
-Macht aus einem HTML-Template (`templates/<name>/template.html`) eine fertige MP4 –
-ohne Cloud, ohne Account, ohne API-Key.
+Turns an HTML template (`templates/<name>/template.html`) into a finished MP4 –
+no cloud, no account, no API key.
 
-## Wie funktioniert das?
+## How does it work?
 
-1. **HTML laden** – das Template wird mit deinen Brand-Werten (Farben, Font, Logo) und den Variablen aus dem User-Prompt gefüllt.
-2. **Browser starten** – Puppeteer öffnet die HTML-Datei in einem headless Chromium auf der passenden Auflösung (16:9 = 1920×1080, 9:16 = 1080×1920 …).
-3. **Frame-by-Frame** – alle CSS-Animationen werden pausiert. Pro Frame setzen wir `Animation.currentTime` exakt auf die gewünschte Zeit und schießen einen PNG-Screenshot. Das ergibt deterministische 30 FPS.
-4. **MP4 bauen** – ffmpeg packt die PNGs zu einer H.264-MP4 mit `yuv420p` und `+faststart` (kompatibel zu YouTube, TikTok, Discord, Web).
+1. **Load HTML** – the template is filled with your brand values (colors, font, logo) and the variables from your prompt.
+2. **Start browser** – Puppeteer opens the HTML file in a headless Chromium at the right resolution (16:9 → 1920×1080, 9:16 → 1080×1920, …).
+3. **Frame-by-frame** – all CSS animations are paused. For each frame we set `Animation.currentTime` exactly to the desired time and take a PNG screenshot. Result: deterministic 30 FPS.
+4. **Build MP4** – ffmpeg packs the PNGs into an H.264 MP4 with `yuv420p` and `+faststart` (compatible with YouTube, TikTok, Discord, web).
 
-## Warum lokal statt Cloud?
+## Why local instead of cloud?
 
-| Lokal (das hier) | Cloud-API |
+| Local (this) | Cloud API |
 |---|---|
-| Kein Account nötig | Account + API-Key |
-| Keine Render-Limits | Pro Render zahlen / Quota |
-| Volle Kontrolle über CSS / JS | Festes Schema |
-| Funktioniert offline | Internet zwingend |
-| Daten bleiben auf deinem Rechner | Upload zum Provider |
+| No account needed | Account + API key |
+| No render limits | Pay per render / quota |
+| Full control over CSS / JS | Fixed schema |
+| Works offline | Internet required |
+| Data stays on your machine | Uploaded to provider |
 
 ## Installation
 
@@ -29,64 +29,76 @@ cd renderer
 npm install
 ```
 
-Beim ersten `npm install` lädt Puppeteer eine eigene Chromium-Version herunter (~150 MB, einmalig). Danach läuft der Renderer komplett offline.
+On first install Puppeteer downloads its own Chromium (~150 MB, one-shot). After that the renderer works fully offline.
 
-## CLI-Nutzung
+If the Chromium download fails, the renderer falls back to a locally installed Chrome or Edge automatically. See [TROUBLESHOOTING.md](../TROUBLESHOOTING.md) for details.
+
+## CLI usage
 
 ```bash
-node render.js --template news-intro --vars '{"TOPIC":"Gemini 4 ist da","SUBTITLE":"Das neue KI-Modell"}'
+node render.js --template news-intro --vars '{"TOPIC":"Gemini 4 is here","SUBTITLE":"The new AI model"}'
 ```
 
-### Optionen
+### Options
 
-| Flag | Beschreibung |
+| Flag | Description |
 |---|---|
-| `-t, --template <name>` | Pflicht. Template-Ordnername unter `templates/` |
-| `-v, --vars <json>` | JSON-String mit User-Variablen, z.B. `'{"TOPIC":"…"}'` |
-| `-o, --output <path>` | Output-Datei (default: `./output/<template>-<timestamp>.mp4`) |
-| `--fps <n>` | FPS überschreiben (default: 30) |
-| `--preview` | Nur die HTML-Datei generieren (kein MP4) – schnelle Vorschau |
-| `--keep-frames` | PNG-Frames nicht löschen (Debug) |
-| `--quiet` | Weniger Logs |
-| `--help` | Hilfe anzeigen |
+| `-t, --template <name>` | Required. Template folder under `templates/` |
+| `-v, --vars <json>` | JSON string with user variables, e.g. `'{"TOPIC":"…"}'` |
+| `-o, --output <path>` | Output file (default: `./output/<template>-<timestamp>.mp4`) |
+| `--fps <n>` | Override FPS (default: 30) |
+| `--preview` | Generate the HTML file only (no MP4) – fast preview |
+| `--keep-frames` | Keep PNG frames (debug) |
+| `--quiet` | Less logging |
+| `--help` | Show help |
 
-### Beispiele
+### Environment variables
+
+| Var | Effect |
+|---|---|
+| `PUPPETEER_EXECUTABLE_PATH` | Force a specific Chrome/Edge/Chromium binary |
+| `PUPPETEER_SKIP_DOWNLOAD=1` | Skip Chromium download on `npm install`; renderer auto-detects system browser |
+
+### Examples
 
 ```bash
-# News-Intro mit Topic
-node render.js -t news-intro -v '{"TOPIC":"Hallo Welt"}'
+# News intro with topic
+node render.js -t news-intro -v '{"TOPIC":"Hello world"}'
 
-# Vertical-Short an einen festen Pfad
+# Vertical short to a fixed path
 node render.js -t vertical-short -o ./output/tiktok.mp4 \
-  -v '{"HOOK":"3 Tricks","CONTENT":"Mehr Reichweite","PLATFORM":"TikTok"}'
+  -v '{"HOOK":"3 tricks","CONTENT_LINE_1":"More reach","PLATFORM":"TikTok"}'
 
-# Vorschau im Browser (ohne MP4)
+# Browser preview (no MP4)
 node render.js -t news-intro --preview -v '{"TOPIC":"Test"}'
 ```
 
 ## Performance
 
-Faustregel auf moderner Hardware (M1/M2, Ryzen 7, ähnlich):
+Rule of thumb on modern hardware (M1/M2, Ryzen 7, …):
 
-- ~30 Sek Render-Zeit pro 10 Sek 16:9-Video bei 30 FPS
-- 9:16 ist ungefähr gleich teuer (kleinere Pixelmenge, gleiche Frame-Anzahl)
-- ffmpeg-Schritt ist meist < 5 % der Gesamtzeit
+- ~30s render time per 10s 16:9 video at 30 FPS
+- 9:16 costs about the same (smaller pixel count, same frame count)
+- ffmpeg step is usually < 5 % of the total time
 
-Engpass ist fast immer der Browser-Screenshot-Loop, nicht das Encoding.
+The bottleneck is almost always the browser screenshot loop, not the encoding.
 
-## Brand-Config
+## Brand config
 
-Der Renderer liest `~/.hyperframes-vbc/brand.config.json`. Wenn die Datei fehlt, fällt er auf
-`brand.config.example.json` aus dem Repo zurück und gibt eine Warnung aus.
+The renderer reads `~/.aivc-dach/brand.config.json`. If the file is missing it falls back to
+`brand.config.example.json` from the repo and prints a warning.
 
-Variablen, die im Template erwartet werden:
+If a legacy `~/.hyperframes-vbc/brand.config.json` exists (from v1.x), the renderer copies it
+to `~/.aivc-dach/` automatically on first run.
+
+Variables expected by the templates:
 
 - `{{BRAND_NAME}}`, `{{PRIMARY_COLOR}}`, `{{ACCENT_COLOR}}`, `{{BACKGROUND_COLOR}}`, `{{TEXT_COLOR}}`
 - `{{FONT_HEADING}}`, `{{FONT_BODY}}`, `{{FONT_MONO}}`
 - `{{LOGO_PATH}}`, `{{LOGO_POSITION}}`, `{{LANGUAGE}}`
-- Plus alle User-Variablen aus `--vars`
+- Plus all user variables from `--vars`
 
-Conditionals werden unterstützt:
+Conditionals are supported:
 
 ```html
 {{#if LOGO_PATH}}<img src="{{LOGO_PATH}}">{{/if}}
@@ -94,11 +106,11 @@ Conditionals werden unterstützt:
 
 ## ffmpeg
 
-Der Renderer nutzt **`ffmpeg-static`** (vorinstalliert via npm) und fällt auf System-`ffmpeg`
-zurück, falls das Modul nicht da ist. Du brauchst nichts manuell konfigurieren.
+The renderer uses **`ffmpeg-static`** (preinstalled via npm) and falls back to system `ffmpeg`
+if the module is unavailable. You don't need to configure anything manually.
 
-## Bekannte Einschränkungen
+## Known limitations
 
-- **Keine Tonspur** – die Templates sind reine Visuals. Sound/TTS kann später als Post-Step ergänzt werden (geplant für v1.2).
-- **Web-Fonts ohne Internet** – wenn das Template Google Fonts via `<link>` lädt, brauchst du Internet beim ersten Render. Lokale Fonts (z.B. Inter aus dem System) gehen offline.
-- **JavaScript im Template wird ausgeführt** – nutze das mit Bedacht. Die Template-Animationen sollen primär CSS sein.
+- **No audio track** – the templates are pure visuals. Sound/TTS can be added as a post-step later (planned for v2.1).
+- **Web fonts without internet** – if the template loads Google Fonts via `<link>`, you need internet on first render. Locally installed fonts (e.g. Inter from your system) work offline.
+- **JavaScript inside the template runs** – use with care. Template animations should be CSS first.

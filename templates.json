@@ -1,41 +1,57 @@
 {
-  "version": "1.0",
+  "version": "2.0",
   "templates": [
     {
       "id": "news-intro",
-      "name": "News-Intro",
+      "name": "News Intro",
       "duration": 10,
       "aspectRatio": "16:9",
       "path": "templates/news-intro",
-      "triggers": ["news-intro", "news intro", "news über", "nachrichten", "news anfang", "news header"],
-      "description": "10 Sek News-Intro mit Logo-Reveal, Topic-Card und Outro"
+      "triggers": [
+        "news intro", "news header", "news about",
+        "news-intro", "nachrichten", "news über", "news anfang",
+        "intro de noticias"
+      ],
+      "description": "10-second news intro with logo reveal, topic card and outro"
     },
     {
       "id": "promo-clip",
-      "name": "Promo-Clip",
+      "name": "Promo Clip",
       "duration": 30,
       "aspectRatio": "16:9",
       "path": "templates/promo-clip",
-      "triggers": ["promo", "werbeclip", "produktvideo", "werbung", "ad", "promotion"],
-      "description": "30 Sek Werbeclip mit Hook, 3 Features, Social Proof und CTA"
+      "triggers": [
+        "promo", "promo clip", "advert", "ad", "product video",
+        "werbeclip", "produktvideo", "werbung", "promotion",
+        "anuncio", "spot publicitario"
+      ],
+      "description": "30-second promo clip with hook, 3 features, social proof and CTA"
     },
     {
       "id": "tutorial-outro",
-      "name": "Tutorial-Outro",
+      "name": "Tutorial Outro",
       "duration": 15,
       "aspectRatio": "16:9",
       "path": "templates/tutorial-outro",
-      "triggers": ["outro", "tutorial-ende", "subscribe", "abo-animation", "ende", "schluss"],
-      "description": "15 Sek Outro mit Recap, Subscribe-Reminder und Vorschau"
+      "triggers": [
+        "outro", "tutorial outro", "tutorial end", "subscribe animation",
+        "tutorial-ende", "abo-animation", "ende", "schluss",
+        "fin de tutorial"
+      ],
+      "description": "15-second outro with recap, subscribe reminder and next-video preview"
     },
     {
       "id": "sponsor-read",
-      "name": "Sponsor-Read",
+      "name": "Sponsor Read",
       "duration": 20,
       "aspectRatio": "16:9",
       "path": "templates/sponsor-read",
-      "triggers": ["sponsor", "werbepartner", "sponsored", "partner-einblendung"],
-      "description": "20 Sek Werbepartner-Einblendung mit Logo, Pitch und Promo-Code"
+      "triggers": [
+        "sponsor", "sponsor read", "sponsored segment", "partner mention",
+        "werbepartner", "sponsored", "partner-einblendung",
+        "patrocinador"
+      ],
+      "description": "20-second sponsor read with logo, pitch and promo code"
     },
     {
       "id": "vertical-short",
@@ -43,17 +59,25 @@
       "duration": 15,
       "aspectRatio": "9:16",
       "path": "templates/vertical-short",
-      "triggers": ["short", "tiktok", "reels", "vertikal", "9:16", "shorts"],
-      "description": "15 Sek vertikales Format für TikTok, Reels und Shorts"
+      "triggers": [
+        "short", "vertical", "tiktok", "reels", "shorts", "9:16",
+        "vertikal", "kurzvideo",
+        "video corto", "vertical"
+      ],
+      "description": "15-second vertical format for TikTok, Reels and Shorts"
     },
     {
       "id": "podcast-intro",
-      "name": "Podcast-Intro",
+      "name": "Podcast Intro",
       "duration": 15,
       "aspectRatio": "16:9",
       "path": "templates/podcast-intro",
-      "triggers": ["podcast-intro", "podcast", "waveform", "podcast intro"],
-      "description": "15 Sek Podcast-Intro mit animierter Waveform"
+      "triggers": [
+        "podcast intro", "podcast", "waveform",
+        "podcast-intro",
+        "intro de podcast"
+      ],
+      "description": "15-second podcast intro with animated waveform"
     }
   ]
 }

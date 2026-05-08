@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Vibe Coding DACH community (Skool)
+    url: https://www.skool.com/[SKOOL-LINK]
+    about: Real-time help, workflow reviews, premium templates.
+  - name: 📖 Troubleshooting
+    url: https://github.com/ZeldoGiQ/aivc-dach/blob/main/TROUBLESHOOTING.md
+    about: Common issues + fixes (Chromium, ffmpeg, permissions, …) before opening an issue.

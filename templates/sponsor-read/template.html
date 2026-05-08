@@ -1,11 +1,14 @@
 <!--
-  Sponsor-Read Template (20 Sekunden)
-  Variablen: {{SPONSOR_NAME}}, {{SPONSOR_LOGO}}, {{PITCH_LINE_1}}, {{PITCH_LINE_2}}, {{PROMO_CODE}}, {{LINK}}
+  Sponsor-Read template (20 seconds, 16:9)
+  Variables: {{SPONSOR_NAME}}, {{SPONSOR_LOGO}}, {{PITCH_LINE_1}}, {{PITCH_LINE_2}}, {{PROMO_CODE}}, {{LINK}}
 -->
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Fraunces:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --primary: {{PRIMARY_COLOR}};
@@ -14,17 +17,20 @@
     --text: {{TEXT_COLOR}};
     --font-heading: '{{FONT_HEADING}}', sans-serif;
   }
+  html { background: var(--bg); overflow: hidden; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { 
+  body {
     width: 1920px; height: 1080px;
     background: var(--bg);
     font-family: var(--font-heading);
     overflow: hidden;
     position: relative;
     color: var(--text);
+    transform-origin: top left;
+    transform: scale(var(--preview-scale, 1));
   }
-  
-  /* Sponsored-Banner immer sichtbar */
+
+  /* Sponsored banner always visible */
   .sponsored-banner {
     position: absolute;
     top: 60px; right: 60px;
@@ -41,10 +47,10 @@
     opacity: 0;
     animation: fadeIn 0.5s ease-out 0.3s forwards;
   }
-  
+
   .scene { position: absolute; inset: 0; opacity: 0; padding: 120px; }
-  
-  /* Logo-Reveal (0-3s) */
+
+  /* Logo reveal (0-3s) */
   .logo-reveal {
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
@@ -65,8 +71,8 @@
     opacity: 0;
     animation: fadeUp 0.5s ease-out 0.5s forwards;
   }
-  
-  /* Brand-Card (3-15s) */
+
+  /* Brand card (3-15s) */
   .brand-card {
     display: flex; flex-direction: column;
     justify-content: center;
@@ -95,12 +101,12 @@
     transform: translateY(30px);
   }
   .pitch-line.first { animation: fadeUp 0.6s ease-out 3.2s forwards; }
-  .pitch-line.second { 
-    animation: fadeUp 0.6s ease-out 3.7s forwards; 
+  .pitch-line.second {
+    animation: fadeUp 0.6s ease-out 3.7s forwards;
     color: var(--primary);
   }
-  
-  /* Promo-Code (15-20s) */
+
+  /* Promo code (15-20s) */
   .promo-section {
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
@@ -136,7 +142,7 @@
     opacity: 0;
     animation: fadeIn 0.5s ease-out 16s forwards;
   }
-  
+
   @keyframes fadeIn { to { opacity: 1; } }
   @keyframes fadeOut { to { opacity: 0; } }
   @keyframes fadeUp {
@@ -151,23 +157,44 @@
 </style>
 </head>
 <body>
-  <div class="sponsored-banner">Werbung · Sponsored</div>
-  
+  <div class="sponsored-banner">Sponsored</div>
+
   <div class="scene logo-reveal">
     {{#if SPONSOR_LOGO}}<img src="{{SPONSOR_LOGO}}" alt="{{SPONSOR_NAME}}">{{/if}}
     <div class="sponsor-name">{{SPONSOR_NAME}}</div>
   </div>
-  
+
   <div class="scene brand-card">
-    <div class="pitch-label">Heutiger Partner</div>
+    <div class="pitch-label">Today's partner</div>
     <div class="pitch-line first">{{PITCH_LINE_1}}</div>
     <div class="pitch-line second">{{PITCH_LINE_2}}</div>
   </div>
-  
+
   <div class="scene promo-section">
-    <div class="promo-label">Mit dem Code</div>
+    <div class="promo-label">Use code</div>
     <div class="promo-code">{{PROMO_CODE}}</div>
     <div class="promo-link">{{LINK}}</div>
   </div>
+
+  <script>
+    (function () {
+      var W = 1920, H = 1080;
+      function fit() {
+        var s = Math.min(window.innerWidth / W, window.innerHeight / H, 1);
+        document.documentElement.style.setProperty('--preview-scale', s);
+      }
+      window.addEventListener('resize', fit);
+      fit();
+      window.__seekToTime = function (timeInMs) {
+        document.getAnimations().forEach(function (a) {
+          try { a.pause(); } catch (_) {}
+          try {
+            var d = (a.effect && a.effect.getTiming) ? (a.effect.getTiming().delay || 0) : 0;
+            a.currentTime = timeInMs - d;
+          } catch (_) {}
+        });
+      };
+    })();
+  </script>
 </body>
 </html>

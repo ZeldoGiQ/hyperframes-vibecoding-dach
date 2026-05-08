@@ -1,11 +1,14 @@
 <!--
-  Vertical Short Template (15 Sekunden, 9:16)
-  Variablen: {{HOOK}}, {{CONTENT_LINES}} (Array), {{CTA}}, {{PLATFORM}}, {{BRAND_NAME}}
+  Vertical Short template (15 seconds, 9:16)
+  Variables: {{HOOK}}, {{CONTENT_LINE_1}}..{{CONTENT_LINE_4}}, {{CTA}}, {{PLATFORM}}, {{BRAND_NAME}}
 -->
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Fraunces:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --primary: {{PRIMARY_COLOR}};
@@ -14,17 +17,20 @@
     --text: {{TEXT_COLOR}};
     --font-heading: '{{FONT_HEADING}}', sans-serif;
   }
+  html { background: var(--bg); overflow: hidden; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { 
+  body {
     width: 1080px; height: 1920px;
     background: var(--bg);
     font-family: var(--font-heading);
     overflow: hidden;
     position: relative;
     color: var(--text);
+    transform-origin: top left;
+    transform: scale(var(--preview-scale, 1));
   }
-  
-  /* Brand-Watermark */
+
+  /* Brand watermark */
   .watermark {
     position: absolute;
     top: 60px; left: 60px;
@@ -35,9 +41,9 @@
     opacity: 0.8;
     z-index: 10;
   }
-  
+
   .scene { position: absolute; inset: 0; opacity: 0; padding: 80px; }
-  
+
   /* Hook (0-2s) */
   .hook {
     display: flex; align-items: center; justify-content: center;
@@ -57,7 +63,7 @@
     animation: hookZoom 0.4s ease-out forwards;
     transform: scale(0.7);
   }
-  
+
   /* Content (2-12s) */
   .content {
     display: flex; flex-direction: column;
@@ -76,7 +82,7 @@
   .content-line:nth-child(2) { animation: lineIn 0.5s ease-out 4.5s forwards; color: var(--primary); }
   .content-line:nth-child(3) { animation: lineIn 0.5s ease-out 7.0s forwards; }
   .content-line:nth-child(4) { animation: lineIn 0.5s ease-out 9.5s forwards; color: var(--accent); }
-  
+
   /* CTA (12-15s) */
   .cta {
     display: flex; flex-direction: column;
@@ -103,7 +109,7 @@
     text-transform: uppercase;
     letter-spacing: 0.15em;
   }
-  
+
   @keyframes fadeIn { to { opacity: 1; } }
   @keyframes fadeOut { to { opacity: 0; } }
   @keyframes hookZoom {
@@ -119,22 +125,43 @@
 </head>
 <body>
   <div class="watermark">@{{BRAND_NAME}}</div>
-  
+
   <div class="scene hook">
     <div class="hook-text">{{HOOK}}</div>
   </div>
-  
+
   <div class="scene content">
     <div class="content-line">{{CONTENT_LINE_1}}</div>
     <div class="content-line">{{CONTENT_LINE_2}}</div>
     <div class="content-line">{{CONTENT_LINE_3}}</div>
     <div class="content-line">{{CONTENT_LINE_4}}</div>
   </div>
-  
+
   <div class="scene cta">
     <div class="cta-icon">👉</div>
     <div class="cta-text">{{CTA}}</div>
-    <div class="cta-platform">auf {{PLATFORM}}</div>
+    <div class="cta-platform">on {{PLATFORM}}</div>
   </div>
+
+  <script>
+    (function () {
+      var W = 1080, H = 1920;
+      function fit() {
+        var s = Math.min(window.innerWidth / W, window.innerHeight / H, 1);
+        document.documentElement.style.setProperty('--preview-scale', s);
+      }
+      window.addEventListener('resize', fit);
+      fit();
+      window.__seekToTime = function (timeInMs) {
+        document.getAnimations().forEach(function (a) {
+          try { a.pause(); } catch (_) {}
+          try {
+            var d = (a.effect && a.effect.getTiming) ? (a.effect.getTiming().delay || 0) : 0;
+            a.currentTime = timeInMs - d;
+          } catch (_) {}
+        });
+      };
+    })();
+  </script>
 </body>
 </html>

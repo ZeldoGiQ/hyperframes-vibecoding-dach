@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 /**
- * Hyperframes Addon by Vibe Coding DACH – Renderer
+ * AIVC DACH – Renderer
  *
- * Lokaler Video-Renderer ohne Cloud, ohne API-Key.
- * Nimmt ein HTML-Template + CSS-Animationen, lädt es in einen
- * headless Chromium, spult Frame für Frame durch alle Animationen
- * und packt die PNG-Frames mit ffmpeg in eine MP4.
+ * Local video renderer. No cloud, no API keys.
+ * Takes an HTML template + CSS animations, loads it in headless Chromium,
+ * steps frame-by-frame through all animations and packs the PNG frames
+ * into an MP4 with ffmpeg.
  *
- * Beispiele:
- *   node render.js --template news-intro --vars '{"TOPIC":"Hallo","SUBTITLE":"Welt"}'
- *   node render.js --template vertical-short --output ./meinvideo.mp4 --vars '{"HOOK":"Boom"}'
- *   node render.js --template news-intro --preview     (nur HTML, kein MP4)
+ * Examples:
+ *   node render.js --template news-intro --vars '{"TOPIC":"Hello","SUBTITLE":"World"}'
+ *   node render.js --template vertical-short --output ./myvideo.mp4 --vars '{"HOOK":"Boom"}'
+ *   node render.js --template news-intro --preview     (HTML only, no MP4)
  *   node render.js --help
  */
 
@@ -19,11 +19,24 @@
 const path = require('path');
 const os = require('os');
 const fs = require('fs-extra');
+const { execSync } = require('child_process');
 const { Command } = require('commander');
 const puppeteer = require('puppeteer');
 const ffmpeg = require('fluent-ffmpeg');
 
-// --- ffmpeg-Pfad finden: ffmpeg-static bevorzugt, dann System-PATH ---
+// --- Paths ---
+const RENDERER_DIR = __dirname;
+const REPO_ROOT = path.resolve(RENDERER_DIR, '..');
+const TEMPLATES_DIR = path.join(REPO_ROOT, 'templates');
+const HOME = os.homedir();
+const NEW_CONFIG_DIR = path.join(HOME, '.aivc-dach');
+const LEGACY_CONFIG_DIR = path.join(HOME, '.hyperframes-vbc');
+const USER_BRAND_CONFIG = path.join(NEW_CONFIG_DIR, 'brand.config.json');
+const FALLBACK_BRAND_CONFIG = path.join(REPO_ROOT, 'brand.config.example.json');
+
+const DEFAULT_FPS = 30;
+
+// --- ffmpeg path resolution: ffmpeg-static, then system PATH ---
 let ffmpegBin = 'ffmpeg';
 try {
   const staticBin = require('ffmpeg-static');
@@ -31,33 +44,26 @@ try {
     ffmpegBin = staticBin;
   }
 } catch (_) {
-  // ffmpeg-static nicht installiert – nutze System-ffmpeg
+  // ffmpeg-static not installed -> use system ffmpeg
 }
 ffmpeg.setFfmpegPath(ffmpegBin);
 
-// --- Pfade ---
-const RENDERER_DIR = __dirname;
-const REPO_ROOT = path.resolve(RENDERER_DIR, '..');
-const TEMPLATES_DIR = path.join(REPO_ROOT, 'templates');
-const HOME = os.homedir();
-const USER_BRAND_CONFIG = path.join(HOME, '.hyperframes-vbc', 'brand.config.json');
-const FALLBACK_BRAND_CONFIG = path.join(REPO_ROOT, 'brand.config.example.json');
-
-const DEFAULT_FPS = 30;
+// --- Config migration: ~/.hyperframes-vbc -> ~/.aivc-dach (one-shot copy) ---
+migrateLegacyConfig();
 
 // --- CLI ---
 const program = new Command();
 program
-  .name('hyperframes-vbc-render')
-  .description('Lokaler Video-Renderer (HTML + CSS-Animation -> MP4) – Hyperframes Addon by Vibe Coding DACH')
-  .version('1.1.0')
-  .requiredOption('-t, --template <name>', 'Template-Ordnername unter templates/ (z.B. news-intro)')
-  .option('-o, --output <path>', 'Output-Pfad für die MP4-Datei (default: ./output/<template>-<timestamp>.mp4)')
-  .option('-v, --vars <json>', 'User-Variablen als JSON-String (z.B. \'{"TOPIC":"Hallo"}\')', '{}')
-  .option('--fps <n>', 'Frames pro Sekunde', String(DEFAULT_FPS))
-  .option('--keep-frames', 'PNG-Frames nicht löschen (Debug)')
-  .option('--preview', 'Nur die HTML-Datei rendern und Pfad zurückgeben (kein MP4)')
-  .option('--quiet', 'Weniger Logs');
+  .name('aivc-dach-render')
+  .description('Local video renderer (HTML + CSS animation -> MP4) – AIVC DACH by ZELDOgiq & Media AI AT')
+  .version('2.0.0')
+  .requiredOption('-t, --template <name>', 'Template folder name under templates/ (e.g. news-intro)')
+  .option('-o, --output <path>', 'Output path for the MP4 file (default: ./output/<template>-<timestamp>.mp4)')
+  .option('-v, --vars <json>', 'User variables as JSON string (e.g. \'{"TOPIC":"Hello"}\')', '{}')
+  .option('--fps <n>', 'Frames per second', String(DEFAULT_FPS))
+  .option('--keep-frames', 'Do not delete PNG frames (debug)')
+  .option('--preview', 'Render HTML file only and return its path (no MP4)')
+  .option('--quiet', 'Less logging');
 
 program.parseAsync(process.argv).then(() => main(program.opts())).catch(fatal);
 
@@ -66,58 +72,58 @@ function log(msg) { if (!program.opts().quiet) console.log(msg); }
 function warn(msg) { console.warn('⚠️   ' + msg); }
 function fatal(err) {
   const msg = err && err.message ? err.message : String(err);
-  console.error('❌  Render fehlgeschlagen: ' + msg);
+  console.error('❌  Render failed: ' + msg);
   process.exit(1);
 }
 function fail(msg) { fatal(new Error(msg)); }
 
-// --- Hauptablauf ---
+// --- Main flow ---
 async function main(opts) {
-  log('🎬  Hyperframes Renderer (Vibe Coding DACH) v1.1.0');
+  log('🎬  AIVC DACH Renderer v2.0.0');
   log('');
 
-  // Template laden
+  // Load template
   const tplDir = path.join(TEMPLATES_DIR, opts.template);
   if (!fs.existsSync(tplDir)) {
-    fail(`Template "${opts.template}" nicht gefunden unter:\n    ${tplDir}\n    Verfügbare Templates: ${listTemplates().join(', ')}`);
+    fail(`Template "${opts.template}" not found at:\n    ${tplDir}\n    Available templates: ${listTemplates().join(', ')}`);
   }
   const tplHtmlPath = path.join(tplDir, 'template.html');
   const tplMetaPath = path.join(tplDir, 'meta.json');
-  if (!fs.existsSync(tplHtmlPath)) fail(`template.html fehlt: ${tplHtmlPath}`);
-  if (!fs.existsSync(tplMetaPath)) fail(`meta.json fehlt: ${tplMetaPath}`);
+  if (!fs.existsSync(tplHtmlPath)) fail(`template.html missing: ${tplHtmlPath}`);
+  if (!fs.existsSync(tplMetaPath)) fail(`meta.json missing: ${tplMetaPath}`);
 
   const meta = await fs.readJson(tplMetaPath);
   let html = await fs.readFile(tplHtmlPath, 'utf8');
 
-  // Brand-Config laden (User-Config > Fallback Beispiel)
+  // Load brand config (user > example fallback)
   let brand;
   if (fs.existsSync(USER_BRAND_CONFIG)) {
     brand = await fs.readJson(USER_BRAND_CONFIG);
   } else {
-    warn(`Keine Brand-Config gefunden unter ${USER_BRAND_CONFIG}`);
-    warn(`Nutze Fallback-Werte aus brand.config.example.json`);
+    warn(`No brand config found at ${USER_BRAND_CONFIG}`);
+    warn(`Using fallback values from brand.config.example.json`);
     brand = await fs.readJson(FALLBACK_BRAND_CONFIG);
   }
 
-  // User-Variablen parsen
+  // Parse user vars
   let userVars = {};
   try {
     userVars = JSON.parse(opts.vars || '{}');
   } catch (e) {
-    fail(`--vars ist kein gültiges JSON: ${e.message}`);
+    fail(`--vars is not valid JSON: ${e.message}`);
   }
 
-  // Template ausfüllen
+  // Fill template
   const replacements = buildReplacements(brand, userVars, meta);
   html = applyTemplate(html, replacements);
 
-  // Aspect-Ratio -> Viewport
+  // Aspect ratio -> viewport
   const { width, height } = aspectToSize(meta.aspectRatio || '16:9');
   const fps = Math.max(1, parseInt(opts.fps, 10) || DEFAULT_FPS);
   const duration = Number(meta.duration) || 10;
   const totalFrames = Math.round(duration * fps);
 
-  // Temp-Verzeichnis (in renderer/tmp/, damit relative file:// URLs funktionieren)
+  // Temp directory inside renderer/tmp/ (so relative file:// URLs work)
   const tmpRoot = path.join(RENDERER_DIR, 'tmp');
   await fs.ensureDir(tmpRoot);
   const tmpDir = await fs.mkdtemp(path.join(tmpRoot, 'render-'));
@@ -125,24 +131,46 @@ async function main(opts) {
   await fs.writeFile(htmlFile, html, 'utf8');
 
   if (opts.preview) {
-    log(`📄  Vorschau-HTML geschrieben: ${htmlFile}`);
-    log(`    Öffne die Datei im Browser, um das Template zu prüfen.`);
+    log(`📄  Preview HTML written: ${htmlFile}`);
+    log(`    Open the file in your browser to inspect the template.`);
     return;
   }
 
   log(`🎯  Template:    ${meta.name || opts.template}`);
-  log(`📐  Auflösung:   ${width}x${height} (${meta.aspectRatio || '16:9'})`);
-  log(`⏱️   Dauer:       ${duration}s @ ${fps}fps = ${totalFrames} Frames`);
+  log(`📐  Resolution:  ${width}x${height} (${meta.aspectRatio || '16:9'})`);
+  log(`⏱️   Duration:    ${duration}s @ ${fps}fps = ${totalFrames} frames`);
   log(`🎞️   ffmpeg:      ${ffmpegBin}`);
   log(`📁  Temp:        ${tmpDir}`);
   log('');
 
-  // Browser starten
-  log('🌐  Starte Browser (Puppeteer/Chromium)...');
-  const browser = await puppeteer.launch({
+  // Locate browser (Puppeteer Chromium, with system Chrome/Edge fallback)
+  const launchOptions = {
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
-  });
+  };
+  const customExecutable = findSystemBrowser();
+  if (customExecutable && shouldUseSystemBrowser()) {
+    launchOptions.executablePath = customExecutable;
+    log(`🌐  Using system browser: ${customExecutable}`);
+  }
+
+  log('🌐  Starting browser (Puppeteer/Chromium)...');
+  let browser;
+  try {
+    browser = await puppeteer.launch(launchOptions);
+  } catch (e) {
+    // Bundled Chromium failed -> try system browser as last resort
+    if (!customExecutable) {
+      throw new Error(
+        `Puppeteer could not launch its bundled Chromium and no system Chrome/Edge was found.\n` +
+        `    See TROUBLESHOOTING.md ("Chromium download failed") for fixes.\n` +
+        `    Original error: ${e.message}`
+      );
+    }
+    warn(`Bundled Chromium failed, retrying with system browser: ${customExecutable}`);
+    launchOptions.executablePath = customExecutable;
+    browser = await puppeteer.launch(launchOptions);
+  }
 
   try {
     const page = await browser.newPage();
@@ -150,7 +178,7 @@ async function main(opts) {
     const fileUrl = pathToFileUrl(htmlFile);
     await page.goto(fileUrl, { waitUntil: 'load', timeout: 30000 });
 
-    // Webfonts laden lassen (best-effort, max 3s)
+    // Let webfonts load (best-effort, max 3s)
     await page.evaluate(() => {
       if (document.fonts && document.fonts.ready) {
         return Promise.race([
@@ -160,7 +188,7 @@ async function main(opts) {
       }
     });
 
-    // Alle Animationen sammeln + pausieren
+    // Collect + pause all animations. Prefer the template-provided helper.
     await page.evaluate(() => {
       window.__hf_anims = document.getAnimations();
       window.__hf_anims.forEach(a => { try { a.pause(); } catch (_) {} });
@@ -169,20 +197,25 @@ async function main(opts) {
     const framesDir = path.join(tmpDir, 'frames');
     await fs.ensureDir(framesDir);
 
-    log(`📸  Erfasse ${totalFrames} Frames...`);
+    log(`📸  Capturing ${totalFrames} frames...`);
     const startTs = Date.now();
     for (let i = 0; i < totalFrames; i++) {
       const tMs = (i / fps) * 1000;
       await page.evaluate((time) => {
         return new Promise(resolve => {
-          for (const anim of window.__hf_anims) {
-            try {
-              const timing = anim.effect && anim.effect.getTiming ? anim.effect.getTiming() : {};
-              const delay = Number(timing.delay) || 0;
-              anim.currentTime = time - delay;
-            } catch (_) {}
+          // Prefer template helper if present (consistent with browser preview)
+          if (typeof window.__seekToTime === 'function') {
+            try { window.__seekToTime(time); } catch (_) {}
+          } else {
+            for (const anim of window.__hf_anims) {
+              try {
+                const timing = anim.effect && anim.effect.getTiming ? anim.effect.getTiming() : {};
+                const delay = Number(timing.delay) || 0;
+                anim.currentTime = time - delay;
+              } catch (_) {}
+            }
           }
-          // Zwei rAF-Ticks: einen für Style, einen für Paint
+          // Two rAF ticks: one for style, one for paint
           requestAnimationFrame(() => requestAnimationFrame(resolve));
         });
       }, tMs);
@@ -192,11 +225,11 @@ async function main(opts) {
 
       if (!opts.quiet && (i % fps === 0 || i === totalFrames - 1)) {
         const sec = Math.min(duration, ((i + 1) / fps)).toFixed(1);
-        process.stdout.write(`\r   ${sec}s / ${duration}s erfasst   `);
+        process.stdout.write(`\r   ${sec}s / ${duration}s captured   `);
       }
     }
     if (!opts.quiet) process.stdout.write('\n');
-    log(`   Frame-Erfassung in ${((Date.now() - startTs) / 1000).toFixed(1)}s erledigt.`);
+    log(`   Frame capture done in ${((Date.now() - startTs) / 1000).toFixed(1)}s.`);
 
     // ffmpeg -> MP4
     const outputDir = path.resolve(
@@ -209,7 +242,7 @@ async function main(opts) {
       : path.join(outputDir, `${opts.template}-${ts}.mp4`);
     await fs.ensureDir(path.dirname(finalOutput));
 
-    log(`🎞️   Erstelle MP4: ${finalOutput}`);
+    log(`🎞️   Encoding MP4: ${finalOutput}`);
     await new Promise((resolve, reject) => {
       ffmpeg()
         .input(path.join(framesDir, 'frame_%06d.png'))
@@ -228,21 +261,92 @@ async function main(opts) {
     });
 
     log('');
-    log(`✅  Fertig! Dein Video liegt hier:`);
+    log(`✅  Done! Your video is here:`);
     log(`    ${finalOutput}`);
 
-    // Aufräumen
+    // Cleanup
     if (!opts.keepFrames) {
       await fs.remove(tmpDir);
     } else {
-      log(`🗂️   Frames behalten: ${framesDir}`);
+      log(`🗂️   Frames kept: ${framesDir}`);
     }
   } finally {
-    await browser.close();
+    if (browser) await browser.close();
   }
 }
 
 // --- Helpers ---
+
+function migrateLegacyConfig() {
+  try {
+    const legacyFile = path.join(LEGACY_CONFIG_DIR, 'brand.config.json');
+    const newFile = USER_BRAND_CONFIG;
+    if (fs.existsSync(legacyFile) && !fs.existsSync(newFile)) {
+      fs.ensureDirSync(NEW_CONFIG_DIR);
+      fs.copyFileSync(legacyFile, newFile);
+      // Also mirror assets dir if it exists
+      const legacyAssets = path.join(LEGACY_CONFIG_DIR, 'assets');
+      const newAssets = path.join(NEW_CONFIG_DIR, 'assets');
+      if (fs.existsSync(legacyAssets) && !fs.existsSync(newAssets)) {
+        fs.copySync(legacyAssets, newAssets);
+      }
+      console.log(
+        `ℹ️   Migrated config from ${LEGACY_CONFIG_DIR} to ${NEW_CONFIG_DIR} – ` +
+        `you can delete the old folder when ready.`
+      );
+    }
+  } catch (e) {
+    // Migration is best-effort – never block the render
+    console.warn('⚠️   Config migration skipped: ' + (e.message || e));
+  }
+}
+
+function shouldUseSystemBrowser() {
+  // Honor explicit env override; otherwise only use system browser if PUPPETEER_SKIP_DOWNLOAD was set
+  if (process.env.PUPPETEER_EXECUTABLE_PATH) return true;
+  if (process.env.PUPPETEER_SKIP_DOWNLOAD === '1' || process.env.PUPPETEER_SKIP_DOWNLOAD === 'true') return true;
+  return false;
+}
+
+function findSystemBrowser() {
+  // Explicit override always wins
+  if (process.env.PUPPETEER_EXECUTABLE_PATH && fs.existsSync(process.env.PUPPETEER_EXECUTABLE_PATH)) {
+    return process.env.PUPPETEER_EXECUTABLE_PATH;
+  }
+
+  const candidates = [];
+  if (process.platform === 'win32') {
+    const pf = process.env['ProgramFiles'] || 'C:\\Program Files';
+    const pfx86 = process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)';
+    const localApp = process.env['LOCALAPPDATA'] || path.join(HOME, 'AppData', 'Local');
+    candidates.push(
+      path.join(pf, 'Google', 'Chrome', 'Application', 'chrome.exe'),
+      path.join(pfx86, 'Google', 'Chrome', 'Application', 'chrome.exe'),
+      path.join(localApp, 'Google', 'Chrome', 'Application', 'chrome.exe'),
+      path.join(pfx86, 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
+      path.join(pf, 'Microsoft', 'Edge', 'Application', 'msedge.exe')
+    );
+  } else if (process.platform === 'darwin') {
+    candidates.push(
+      '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+      '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
+      '/Applications/Chromium.app/Contents/MacOS/Chromium'
+    );
+  } else {
+    // Linux: try `which` for common binaries
+    for (const bin of ['google-chrome', 'google-chrome-stable', 'chromium', 'chromium-browser', 'microsoft-edge']) {
+      try {
+        const out = execSync(`which ${bin}`, { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+        if (out) candidates.push(out);
+      } catch (_) {}
+    }
+  }
+
+  for (const c of candidates) {
+    if (c && fs.existsSync(c)) return c;
+  }
+  return null;
+}
 
 function listTemplates() {
   if (!fs.existsSync(TEMPLATES_DIR)) return [];
@@ -265,10 +369,10 @@ function buildReplacements(brand, userVars, meta) {
     FONT_MONO: b.fontMono || 'JetBrains Mono',
     LOGO_PATH: b.logoPath ? toFilePath(b.logoPath) : '',
     LOGO_POSITION: b.logoPosition || 'top-left',
-    LANGUAGE: b.language || 'de'
+    LANGUAGE: b.language || 'auto'
   };
 
-  // Defaults aus meta.variables (example), nur falls User nichts liefert
+  // Defaults from meta.variables (example values), only if user provided none
   if (Array.isArray(meta && meta.variables)) {
     for (const v of meta.variables) {
       if (v && v.key && map[v.key] === undefined) {
@@ -277,7 +381,7 @@ function buildReplacements(brand, userVars, meta) {
     }
   }
 
-  // User-Vars überschreiben alles
+  // User vars override everything
   if (userVars && typeof userVars === 'object') {
     for (const [k, v] of Object.entries(userVars)) {
       map[k] = v == null ? '' : String(v);
@@ -287,18 +391,18 @@ function buildReplacements(brand, userVars, meta) {
 }
 
 function applyTemplate(html, replacements) {
-  // 1. Conditional-Blöcke {{#if VAR}}...{{/if}} (nicht-greedy, multiline)
+  // 1. Conditional blocks {{#if VAR}}...{{/if}} (non-greedy, multiline)
   html = html.replace(
     /\{\{#if ([A-Z0-9_]+)\}\}([\s\S]*?)\{\{\/if\}\}/g,
     (_full, key, body) => (replacements[key] ? body : '')
   );
 
-  // 2. Variablen {{VAR}}
+  // 2. Variables {{VAR}}
   html = html.replace(/\{\{([A-Z0-9_]+)\}\}/g, (full, key) => {
     if (Object.prototype.hasOwnProperty.call(replacements, key)) {
       return replacements[key];
     }
-    warn(`Variable ${full} nicht gefunden – Platzhalter bleibt im HTML`);
+    warn(`Variable ${full} not found – placeholder kept in HTML`);
     return full;
   });
 

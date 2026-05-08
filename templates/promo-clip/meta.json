@@ -1,20 +1,20 @@
 {
   "id": "promo-clip",
-  "name": "Promo-Clip",
+  "name": "Promo Clip",
   "duration": 30,
   "aspectRatio": "16:9",
-  "description": "Werbeclip mit Hook, 3 Features, Social Proof und CTA",
+  "description": "Promo clip with hook, 3 features, social proof and CTA",
   "scenes": [
-    {"id": 1, "from": 0, "to": 5, "name": "Hook", "description": "Aufmerksamkeitsstarker Einstiegs-Text"},
-    {"id": 2, "from": 5, "to": 20, "name": "Features", "description": "3 Feature-Karten mit Icons"},
-    {"id": 3, "from": 20, "to": 25, "name": "Social Proof", "description": "Große Zahl mit Beschreibung"},
-    {"id": 4, "from": 25, "to": 30, "name": "CTA", "description": "Call-to-Action Button"}
+    {"id": 1, "from": 0, "to": 5, "name": "Hook", "description": "Attention-grabbing opening line"},
+    {"id": 2, "from": 5, "to": 20, "name": "Features", "description": "3 feature cards with icons"},
+    {"id": 3, "from": 20, "to": 25, "name": "Social proof", "description": "Big number with caption"},
+    {"id": 4, "from": 25, "to": 30, "name": "CTA", "description": "Call-to-action button"}
   ],
   "variables": [
-    {"key": "HOOK", "label": "Hook-Text (1 Satz, packend)", "required": true, "example": "Spar 10 Stunden pro Woche", "maxLength": 50},
-    {"key": "FEATURE_1", "label": "Feature 1", "required": true, "example": "Blitzschnell", "maxLength": 30},
-    {"key": "FEATURE_2", "label": "Feature 2", "required": true, "example": "Einfach zu nutzen", "maxLength": 30},
-    {"key": "FEATURE_3", "label": "Feature 3", "required": true, "example": "Voll automatisiert", "maxLength": 30},
-    {"key": "CTA_TEXT", "label": "Call-to-Action", "required": true, "example": "Jetzt starten", "maxLength": 25}
+    {"key": "HOOK", "label": "Hook line (1 sentence, punchy)", "required": true, "example": "Save 10 hours every week", "maxLength": 50},
+    {"key": "FEATURE_1", "label": "Feature 1", "required": true, "example": "Lightning fast", "maxLength": 30},
+    {"key": "FEATURE_2", "label": "Feature 2", "required": true, "example": "Easy to use", "maxLength": 30},
+    {"key": "FEATURE_3", "label": "Feature 3", "required": true, "example": "Fully automated", "maxLength": 30},
+    {"key": "CTA_TEXT", "label": "Call-to-action", "required": true, "example": "Get started", "maxLength": 25}
   ]
 }

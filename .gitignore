@@ -1,15 +1,16 @@
-# Output und Render-Dateien
+# Output and render files
 output/
 *.mp4
 *.mov
 *.webm
 *.gif
 
-# Test-Artefakte
+# Test artefacts
 examples/*.html
 
-# User-spezifische Configs (sollten nicht ins Repo)
+# User-specific configs (must not be committed)
 brand.config.json
+.aivc-dach/
 .hyperframes-vbc/
 
 # Node

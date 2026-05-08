@@ -1,10 +1,10 @@
 {
-  "name": "hyperframes-vbc-renderer",
-  "version": "1.1.0",
-  "description": "Lokaler Browser-basierter Video-Renderer für das Hyperframes Addon by Vibe Coding DACH (HTML + CSS-Animation -> MP4 via Puppeteer + ffmpeg)",
+  "name": "aivc-dach-renderer",
+  "version": "2.0.0",
+  "description": "Local browser-based video renderer for AIVC DACH (HTML + CSS animation -> MP4 via Puppeteer + ffmpeg). No cloud, no API keys.",
   "main": "render.js",
   "bin": {
-    "hyperframes-vbc-render": "render.js"
+    "aivc-dach-render": "render.js"
   },
   "scripts": {
     "render": "node render.js",
@@ -21,9 +21,9 @@
     "node": ">=18"
   },
   "license": "MIT",
-  "author": "Vibe Coding DACH",
+  "author": "ZELDOgiq & Media AI AT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ZeldoGiQ/hyperframes-vibecoding-dach.git"
+    "url": "https://github.com/ZeldoGiQ/aivc-dach.git"
   }
 }

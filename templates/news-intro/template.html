@@ -1,12 +1,15 @@
 <!--
-  News-Intro Template (10 Sekunden)
-  Variablen: {{BRAND_NAME}}, {{TOPIC}}, {{SUBTITLE}}, {{LOGO_PATH}}
-  Brand-Vars aus brand.config.json: --primary, --accent, --bg, --text, --font-heading
+  News-Intro template (10 seconds, 16:9)
+  Variables: {{BRAND_NAME}}, {{TOPIC}}, {{SUBTITLE}}, {{LOGO_PATH}}
+  Brand vars from brand.config.json: --primary, --accent, --bg, --text, --font-heading
 -->
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Fraunces:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --primary: {{PRIMARY_COLOR}};
@@ -15,16 +18,19 @@
     --text: {{TEXT_COLOR}};
     --font-heading: '{{FONT_HEADING}}', sans-serif;
   }
+  html { background: var(--bg); overflow: hidden; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { 
+  body {
     width: 1920px; height: 1080px;
     background: var(--bg);
     font-family: var(--font-heading);
     overflow: hidden;
     position: relative;
+    transform-origin: top left;
+    transform: scale(var(--preview-scale, 1));
   }
-  
-  /* Hintergrund-Glow */
+
+  /* Background glow */
   .glow {
     position: absolute;
     top: 50%; left: 50%;
@@ -35,8 +41,8 @@
     animation: glowPulse 10s ease-in-out forwards;
     filter: blur(80px);
   }
-  
-  /* Szene 1: Logo-Reveal (0-2s) */
+
+  /* Scene 1: Logo reveal (0-2s) */
   .logo-scene {
     position: absolute;
     top: 50%; left: 50%;
@@ -44,7 +50,7 @@
     opacity: 0;
     animation: logoIn 2s ease-out forwards, logoOut 0.5s ease-in 1.8s forwards;
   }
-  .logo-scene img { 
+  .logo-scene img {
     width: 400px; height: auto;
     filter: drop-shadow(0 0 30px var(--primary));
   }
@@ -56,8 +62,8 @@
     margin-top: 24px;
     letter-spacing: -0.02em;
   }
-  
-  /* Szene 2: Topic-Card (2-8s) */
+
+  /* Scene 2: Topic card (2-8s) */
   .topic-card {
     position: absolute;
     top: 50%; left: 50%;
@@ -94,8 +100,8 @@
     font-weight: 400;
     line-height: 1.4;
   }
-  
-  /* Szene 3: Outro (8-10s) */
+
+  /* Scene 3: Outro (8-10s) */
   .outro {
     position: absolute;
     bottom: 80px; left: 50%;
@@ -108,8 +114,8 @@
     letter-spacing: 0.05em;
   }
   .outro .accent { color: var(--accent); }
-  
-  /* Animationen */
+
+  /* Animations */
   @keyframes glowPulse {
     0% { opacity: 0; }
     20% { opacity: 0.6; }
@@ -140,20 +146,41 @@
 </head>
 <body>
   <div class="glow"></div>
-  
+
   <div class="logo-scene">
     {{#if LOGO_PATH}}<img src="{{LOGO_PATH}}" alt="Logo">{{/if}}
     <div class="brand-name">{{BRAND_NAME}}</div>
   </div>
-  
+
   <div class="topic-card">
     <div class="topic-label">News</div>
     <div class="topic-title">{{TOPIC}}</div>
     <div class="topic-subtitle">{{SUBTITLE}}</div>
   </div>
-  
+
   <div class="outro">
-    <span class="accent">{{BRAND_NAME}}</span> · Aktuell
+    <span class="accent">{{BRAND_NAME}}</span> · Live
   </div>
+
+  <script>
+    (function () {
+      var W = 1920, H = 1080;
+      function fit() {
+        var s = Math.min(window.innerWidth / W, window.innerHeight / H, 1);
+        document.documentElement.style.setProperty('--preview-scale', s);
+      }
+      window.addEventListener('resize', fit);
+      fit();
+      window.__seekToTime = function (timeInMs) {
+        document.getAnimations().forEach(function (a) {
+          try { a.pause(); } catch (_) {}
+          try {
+            var d = (a.effect && a.effect.getTiming) ? (a.effect.getTiming().delay || 0) : 0;
+            a.currentTime = timeInMs - d;
+          } catch (_) {}
+        });
+      };
+    })();
+  </script>
 </body>
 </html>
