@@ -21,7 +21,7 @@ A single tool that lets non-technical creators:
 
 1. **Generate** ready-to-use intros, outros, shorts and sponsor reads from a one-line prompt (the v2.0.0 workflow).
 2. **Edit** raw footage with AI assistance — the editor's chat sidebar can cut, trim, add clips, drop a generated intro on the timeline, all via the **MCP server**.
-3. **Mix providers**: Claude (default), OpenAI or local Ollama via the Vercel AI SDK. BYOLLM.
+3. **Mix providers**: Anthropic (default), Google Gemini, OpenAI or local Ollama via the Vercel AI SDK. BYOLLM.
 
 This `v3.0.0-alpha.1` release is the **foundation**: branch + OpenCut fork + generator move + MCP skeleton. The actual AI integration (chat sidebar wired to MCP, drag-and-drop templates, bidirectional state sync) lands in subsequent v3.0.0-alpha.x and the v3.0.0 stable release.
 
@@ -122,12 +122,27 @@ Both are green for v3.0.0-alpha.1. The editor doesn't have a CI smoke yet — th
 | Version | Phase | Scope |
 |---|---|---|
 | **v3.0.0-alpha.1** | Foundation (this PR) | Branch + OpenCut fork + generator move + MCP skeleton |
-| v3.0.0-alpha.2 | AI layer | Vercel AI SDK + Anthropic / OpenAI / Ollama providers, chat sidebar shell |
+| v3.0.0-alpha.2 | AI layer | Vercel AI SDK + Anthropic / Google / OpenAI / Ollama providers, chat sidebar shell |
 | v3.0.0-alpha.3 | MCP wiring | `editor.cut`, `editor.trim`, `editor.addClip` connect to OpenCut's Zustand store |
 | v3.0.0-alpha.4 | Templates → editor | Drag-and-drop generator templates onto the timeline, live render preview |
 | v3.0.0-alpha.5 | State sync | Bidirectional: chat ↔ timeline live updates |
 | **v3.0.0** | Stable | Full branding pass, real production env, end-to-end smoke (footage → cut → drop intro → export) |
 | v3.1.0 | Polish | Native AIVC logo, custom Inter weights, tutorial videos |
+
+---
+
+## 🔌 Configuring the AI provider
+
+The chat sidebar in the editor talks to one of four LLM providers, picked via env vars in `editor/apps/web/.env.local` (copy from `.env.example`). **You pick the model**: AIVC DACH does not hardcode model names because provider lineups change too quickly to keep current. Set the `*_MODEL` env var to whatever's listed in the provider's official model docs at the time you set things up:
+
+| Provider | API key env | Model env | Pick a current model id from |
+|---|---|---|---|
+| Anthropic *(default)* | `ANTHROPIC_API_KEY` | `ANTHROPIC_MODEL` | https://docs.anthropic.com/en/docs/about-claude/models |
+| Google (Gemini) | `GOOGLE_GENERATIVE_AI_API_KEY` | `GEMINI_MODEL` | https://ai.google.dev/gemini-api/docs/models |
+| OpenAI | `OPENAI_API_KEY` | `OPENAI_MODEL` | https://platform.openai.com/docs/models |
+| Ollama (local) | — | `OLLAMA_MODEL` | https://ollama.com/library (also: `ollama pull <id>` first) |
+
+Switch providers by setting `AIVC_AI_PROVIDER=anthropic|google|openai|ollama`. If a `*_MODEL` env var is empty when the chosen provider runs, the chat surfaces a German error pointing you at the docs URL above — no silent fallback to a possibly-deprecated default.
 
 ---
 
@@ -179,5 +194,5 @@ The editor under `editor/` is a fork of [OpenCut](https://github.com/OpenCut-app
 - **Editor foundation:** [OpenCut](https://github.com/OpenCut-app/OpenCut) (MIT)
 - **Generator:** Puppeteer + ffmpeg, six templates inspired by Hyperframes-style workflows
 - **MCP server:** Built on [@modelcontextprotocol/sdk](https://github.com/modelcontextprotocol/typescript-sdk)
-- **AI layer (planned):** [Vercel AI SDK](https://github.com/vercel/ai) — Anthropic / OpenAI / Ollama providers
+- **AI layer:** [Vercel AI SDK](https://github.com/vercel/ai) — Anthropic / Google / OpenAI / Ollama providers
 - **Community:** [Vibe Coding DACH](https://www.skool.com/vibe-coding-dach) Skool (German-speaking creators — courses, premium templates, live workflow reviews)

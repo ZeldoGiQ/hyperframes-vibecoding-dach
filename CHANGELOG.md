@@ -14,10 +14,10 @@ This release wires the AI layer end-to-end inside the editor. Users can now driv
   - `tool-executor.ts` — client-side execution against `EditorCore.getInstance()`. Tools mutate the timeline through OpenCut's existing command pattern (`editor.timeline.splitElements`, `updateElements`, `insertElement`), so undo/redo Just Works.
   - `selection-resolver.ts` — for `editor.cut`, finds all clips active at the given timestamp across video, audio, overlay tracks. **Default behavior**: skip muted audio tracks and hidden visual tracks; cut everything else. (See "Known scope cuts" below.)
   - `time-utils.ts` — seconds ↔ `MediaTime` (WASM tick) conversion at the boundary.
-  - `provider.ts` — Anthropic (default), Google (Gemini), OpenAI, Ollama selectable via `AIVC_AI_PROVIDER`. Model overridable via `AIVC_AI_MODEL`. Missing key → German error message with a link to the provider's console.
+  - `provider.ts` — Anthropic (default), Google (Gemini), OpenAI, Ollama selectable via `AIVC_AI_PROVIDER`. **No hardcoded model names** — the model id is read from a per-provider env var (`ANTHROPIC_MODEL`, `GEMINI_MODEL`, `OPENAI_MODEL`, `OLLAMA_MODEL`). Missing key or missing model → German error message with a link to the provider's API-key console or model-list docs (so the message stays accurate as provider lineups shift).
   - `components/chat-sidebar.tsx` + `components/tool-call-display.tsx` — collapsible right-side chat panel with streaming, tool-call visualization (input/output JSON, status badge), keyboard submit (Enter), error surfacing.
 - **`/api/ai/chat`** — Next.js route handler using `streamText` with the four tool definitions. Returns 400 + structured error if the selected provider is misconfigured.
-- **`.env.example`** — documents `AIVC_AI_PROVIDER`, `AIVC_AI_MODEL`, `ANTHROPIC_API_KEY`, `GOOGLE_GENERATIVE_AI_API_KEY`, `OPENAI_API_KEY`, `OLLAMA_BASE_URL`.
+- **`.env.example`** — documents `AIVC_AI_PROVIDER` plus per-provider `*_API_KEY` and `*_MODEL` pairs. Each provider block links to the official model list so users can pick a current id without guessing.
 - **Editor page**: floating Bot toggle (top-right of preview area) opens the sidebar; close button collapses it.
 
 ### Changed
