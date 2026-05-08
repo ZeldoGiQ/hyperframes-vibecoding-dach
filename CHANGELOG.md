@@ -4,6 +4,35 @@ All notable changes to AIVC DACH.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## v3.0.0-alpha.2 – 2026-05-08 · AI layer (chat sidebar + real editor tools)
+
+This release wires the AI layer end-to-end inside the editor. Users can now drive the timeline from a chat panel.
+
+### Added
+- **`editor/apps/web/src/ai/`** — Vercel AI SDK integration:
+  - `tools.ts` — Zod schemas for `editor.getState`, `editor.cut`, `editor.trim`, `editor.addClip`, shared between server and client.
+  - `tool-executor.ts` — client-side execution against `EditorCore.getInstance()`. Tools mutate the timeline through OpenCut's existing command pattern (`editor.timeline.splitElements`, `updateElements`, `insertElement`), so undo/redo Just Works.
+  - `selection-resolver.ts` — for `editor.cut`, finds all clips active at the given timestamp across video, audio, overlay tracks. **Default behavior**: skip muted audio tracks and hidden visual tracks; cut everything else. (See "Known scope cuts" below.)
+  - `time-utils.ts` — seconds ↔ `MediaTime` (WASM tick) conversion at the boundary.
+  - `provider.ts` — Anthropic (default), OpenAI, Ollama selectable via `AIVC_AI_PROVIDER`. Model overridable via `AIVC_AI_MODEL`. Missing key → German error message with a link to the provider's console.
+  - `components/chat-sidebar.tsx` + `components/tool-call-display.tsx` — collapsible right-side chat panel with streaming, tool-call visualization (input/output JSON, status badge), keyboard submit (Enter), error surfacing.
+- **`/api/ai/chat`** — Next.js route handler using `streamText` with the four tool definitions. Returns 400 + structured error if the selected provider is misconfigured.
+- **`.env.example`** — documents `AIVC_AI_PROVIDER`, `AIVC_AI_MODEL`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `OLLAMA_BASE_URL`.
+- **Editor page**: floating Bot toggle (top-right of preview area) opens the sidebar; close button collapses it.
+
+### Changed
+- **`mcp-server/README.md`** — clearly marks the stdio server as held back for alpha.3. Real `editor.*` tools live in the editor itself for alpha.2; the WebSocket bridge from the stdio server to the running browser tab lands in alpha.3 (so external agents like Claude Code can drive the timeline too).
+
+### Dependencies
+- Added to `editor/apps/web`: `ai@^6`, `@ai-sdk/anthropic`, `@ai-sdk/openai`, `@ai-sdk/react`, `ollama-ai-provider-v2`.
+
+### Known scope cuts (deferred)
+- **Bidirectional state sync** (UI → chat awareness): chat does not yet observe UI-driven edits. Planned for alpha.3.
+- **MCP-server bridge**: stdio server still returns "not implemented yet" for `editor.*`. Planned for alpha.3.
+- **Cut behavior edge cases**: the active-track resolver uses a simple containment check (`startTime < t < endTime`). Tracks muted/hidden as a whole are skipped; per-element `hidden` flags on overlay tracks are not yet considered. We can refine in alpha.3 if it bites.
+- **Templates onto timeline**: alpha.4.
+- **Live preview while AI edits**: alpha.3.
+
 ## v3.0.0-alpha.1 – 2026-05-08 · Foundation (editor + generator + MCP skeleton)
 
 **This is a foundation release**, not a feature release. The actual AI layer + editor wiring lands in v3.0.0-alpha.2 onwards.

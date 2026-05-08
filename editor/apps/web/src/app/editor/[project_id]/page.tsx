@@ -34,10 +34,13 @@ import {
 	bookmarkNotesPreviewOverlay,
 	getBookmarkPreviewOverlaySource,
 } from "@/timeline/bookmarks/index";
+import { ChatSidebar } from "@/ai/components/chat-sidebar";
+import { Bot } from "lucide-react";
 
 export default function Editor() {
 	const params = useParams();
 	const projectId = params.project_id as string;
+	const [chatOpen, setChatOpen] = useState(false);
 
 	return (
 		<MobileGate>
@@ -45,8 +48,35 @@ export default function Editor() {
 				<div className="bg-background flex h-screen w-screen flex-col overflow-hidden">
 					<DegradedRendererBanner />
 					<EditorHeader />
-					<div className="min-h-0 min-w-0 flex-1">
-						<EditorLayout />
+					<div className="min-h-0 min-w-0 flex-1 flex">
+						<div className="min-h-0 min-w-0 flex-1 relative">
+							<EditorLayout />
+							{!chatOpen && (
+								<Button
+									variant="default"
+									size="icon"
+									className="absolute right-3 top-3 z-10 shadow-md"
+									onClick={() => setChatOpen(true)}
+									aria-label="Open AI assistant"
+								>
+									<Bot className="size-4" />
+								</Button>
+							)}
+						</div>
+						{chatOpen && (
+							<div className="w-[360px] min-w-[280px] max-w-[480px] flex-shrink-0 relative">
+								<ChatSidebar />
+								<Button
+									variant="text"
+									size="icon"
+									className="absolute right-1 top-1 z-10"
+									onClick={() => setChatOpen(false)}
+									aria-label="Close AI assistant"
+								>
+									<HugeiconsIcon icon={Cancel01Icon} />
+								</Button>
+							</div>
+						)}
 					</div>
 					<Onboarding />
 					<MigrationDialog />
