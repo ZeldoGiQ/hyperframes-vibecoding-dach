@@ -5,6 +5,9 @@ output/
 *.webm
 *.gif
 
+# Test-Artefakte
+examples/*.html
+
 # User-spezifische Configs (sollten nicht ins Repo)
 brand.config.json
 .hyperframes-vbc/
@@ -14,6 +17,9 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+renderer/node_modules/
+renderer/tmp/
+renderer/package-lock.json
 
 # Python
 __pycache__/

@@ -3,7 +3,7 @@
 
 **Erstelle professionelle Videos mit Claude Code – komplett auf Deutsch, in Minuten statt Stunden.**
 
-Dieses Addon erweitert [Hyperframes](https://hyperframes.heygen.com) um deutschsprachige Workflows, fertige Format-Templates und einen Brand-Wizard. Du musst nichts können außer Claude Code installiert zu haben.
+Eigenständiger Video-Renderer für Anfänger – inspiriert von Hyperframes-Workflows ([HeyGen Hyperframes](https://hyperframes.heygen.com)), aber komplett **lokal** und ohne Cloud-Account. Das Addon enthält einen eingebauten Renderer (Puppeteer + ffmpeg), 6 fertige Format-Templates, einen Brand-Wizard und einen Claude-Code-Skill auf Deutsch. Du musst nichts können außer Claude Code installiert zu haben.
 
 ---
 
@@ -96,11 +96,14 @@ Du willst tiefer einsteigen? In der **Vibe Coding DACH Skool-Community** gibt es
 
 Das Installationsskript prüft alles automatisch und installiert was fehlt:
 
-- ✅ Claude Code
-- ✅ Node.js (wird ggf. installiert)
-- ✅ Python 3.11+ (wird ggf. installiert)
-- ✅ ffmpeg (wird ggf. installiert)
-- ✅ Git (wird ggf. installiert)
+| Tool | Wird genutzt für |
+|---|---|
+| ✅ Claude Code | Die Skill-Integration & der „eine Befehl"-Workflow |
+| ✅ Node.js (≥ 18) | Den lokalen Renderer |
+| ✅ Python 3.11+ | Faster Whisper (optional, geplant für Subtitles in v1.2) |
+| ✅ ffmpeg | Frame-Sequenz → MP4-Encoding |
+| ✅ Git | Repo holen + Updates |
+| ⚙️ Puppeteer + Chromium | Wird automatisch via `npm install` gezogen (~150 MB einmalig) |
 
 **Unterstützte Systeme:** Windows 10/11, macOS, Linux
 
@@ -114,6 +117,7 @@ MIT – Mach damit was du willst. Wenn dir das Tool hilft, freuen wir uns über 
 
 ## 🤝 Credits
 
-- Basiert auf [Hyperframes](https://hyperframes.heygen.com) von HeyGen / Hunyuan
+- **Inspiriert von** [Hyperframes](https://hyperframes.heygen.com) (HeyGen) – die Idee, Videos aus deklarativen Templates zu rendern. Dieses Addon baut **keinen** Hyperframes-Client, sondern einen eigenständigen lokalen Renderer mit ähnlicher Philosophie.
 - Inspiriert vom [RoboNuggets Helper](https://github.com/robonuggets/hyperframes-helper)
+- Renderer baut auf [Puppeteer](https://pptr.dev/) und [ffmpeg](https://ffmpeg.org/)
 - Gebaut mit ❤️ für die **Vibe Coding DACH** Community

@@ -2,6 +2,7 @@
 
 # ============================================================
 #   Hyperframes Addon by Vibe Coding DACH - Mac/Linux Installer
+#   Lokaler Renderer (Puppeteer + ffmpeg) – v1.1.0
 # ============================================================
 
 set -e
@@ -13,7 +14,10 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-INSTALL_DIR="$HOME/hyperframes-vbc"
+# Repo-Root = ein Level über scripts/
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+REPO_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
+RENDERER_DIR="$REPO_ROOT/renderer"
 CONFIG_DIR="$HOME/.hyperframes-vbc"
 ERRORS=0
 
@@ -21,17 +25,17 @@ echo ""
 echo "╔══════════════════════════════════════════════════════════╗"
 echo "║                                                          ║"
 echo "║   🎬 Hyperframes Addon by Vibe Coding DACH               ║"
-echo "║   Installation startet...                                ║"
+echo "║   Installation startet... (v1.1.0 – lokaler Renderer)    ║"
 echo "║                                                          ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 
 # --- Schritt 1: Dependency-Check ---
-echo -e "${BLUE}[1/6] System-Check läuft...${NC}"
+echo -e "${BLUE}[1/5] System-Check läuft...${NC}"
 echo ""
 
 check_command() {
-    if command -v $1 &> /dev/null; then
+    if command -v "$1" >/dev/null 2>&1; then
         echo -e "${GREEN}✅ $1 gefunden${NC}"
     else
         echo -e "${RED}❌ $1 fehlt${NC}"
@@ -55,10 +59,10 @@ else
     INSTALL_HINT_GIT="sudo apt install git"
 fi
 
-check_command "node" "Installiere mit: $INSTALL_HINT_NODE"
+check_command "node"    "Installiere mit: $INSTALL_HINT_NODE"
 check_command "python3" "Installiere mit: $INSTALL_HINT_PYTHON"
-check_command "ffmpeg" "Installiere mit: $INSTALL_HINT_FFMPEG"
-check_command "git" "Installiere mit: $INSTALL_HINT_GIT"
+check_command "ffmpeg"  "Installiere mit: $INSTALL_HINT_FFMPEG"
+check_command "git"     "Installiere mit: $INSTALL_HINT_GIT"
 
 echo ""
 if [ $ERRORS -gt 0 ]; then
@@ -67,66 +71,47 @@ if [ $ERRORS -gt 0 ]; then
 fi
 
 # --- Schritt 2: Verzeichnisse ---
-echo -e "${BLUE}[2/6] Verzeichnisse werden angelegt...${NC}"
-mkdir -p "$INSTALL_DIR"
+echo -e "${BLUE}[2/5] Verzeichnisse werden angelegt...${NC}"
 mkdir -p "$CONFIG_DIR/assets"
 echo -e "${GREEN}✅ Verzeichnisse bereit${NC}"
 echo ""
 
-# --- Schritt 3: Hyperframes klonen ---
-echo -e "${BLUE}[3/6] Hyperframes wird heruntergeladen...${NC}"
-if [ ! -d "$INSTALL_DIR/hyperframes" ]; then
-    cd "$INSTALL_DIR"
-    git clone https://github.com/heygen/hyperframes.git
+# --- Schritt 3: Renderer (Puppeteer + ffmpeg-Wrapper) ---
+echo -e "${BLUE}[3/5] Lokaler Renderer wird installiert...${NC}"
+echo -e "${YELLOW}    Hinweis: Beim ersten Mal lädt Puppeteer ca. 150 MB Chromium herunter."
+echo -e "    Das passiert nur einmal und braucht 1–3 Minuten je nach Internet.${NC}"
+echo ""
+
+if [ ! -f "$RENDERER_DIR/package.json" ]; then
+    echo -e "${RED}❌ renderer/package.json nicht gefunden unter: $RENDERER_DIR${NC}"
+    echo "   Bist du sicher, dass du im hyperframes-vibecoding-dach-Repo bist?"
+    exit 1
+fi
+
+cd "$RENDERER_DIR"
+npm install --no-audit --no-fund
+echo -e "${GREEN}✅ Renderer installiert${NC}"
+echo ""
+
+# --- Schritt 4: Faster Whisper (optional, für spätere Subtitle-Features) ---
+echo -e "${BLUE}[4/5] Faster Whisper wird installiert (optional, für Subtitles)...${NC}"
+if pip3 install faster-whisper --quiet 2>/dev/null; then
+    echo -e "${GREEN}✅ Faster Whisper bereit${NC}"
 else
-    echo -e "${YELLOW}ℹ️  Hyperframes ist schon installiert. Überspringe.${NC}"
+    echo -e "${YELLOW}⚠️  Faster Whisper konnte nicht installiert werden."
+    echo -e "    Nicht schlimm – Subtitle-Features sind erst in v1.2 geplant."
+    echo -e "    Du kannst es später nachholen mit: pip3 install faster-whisper${NC}"
 fi
-echo -e "${GREEN}✅ Hyperframes bereit${NC}"
 echo ""
 
-# --- Schritt 4: NPM ---
-echo -e "${BLUE}[4/6] Node-Pakete werden installiert (kann 1-2 Minuten dauern)...${NC}"
-cd "$INSTALL_DIR/hyperframes"
-npm install --silent
-echo -e "${GREEN}✅ Node-Pakete installiert${NC}"
-echo ""
-
-# --- Schritt 5: Faster Whisper ---
-echo -e "${BLUE}[5/6] Faster Whisper wird installiert...${NC}"
-pip3 install faster-whisper --quiet || echo -e "${YELLOW}⚠️  Faster Whisper konnte nicht installiert werden. Du kannst es später nachinstallieren.${NC}"
-echo -e "${GREEN}✅ Faster Whisper bereit${NC}"
-echo ""
-
-# --- Schritt 6: Brand-Config ---
-echo -e "${BLUE}[6/6] Standard-Konfiguration wird erstellt...${NC}"
+# --- Schritt 5: Brand-Config ---
+echo -e "${BLUE}[5/5] Standard-Konfiguration wird erstellt...${NC}"
 if [ ! -f "$CONFIG_DIR/brand.config.json" ]; then
-    cat > "$CONFIG_DIR/brand.config.json" << 'EOF'
-{
-  "version": "1.0",
-  "brand": {
-    "name": "Meine Marke",
-    "primaryColor": "#0EA5E9",
-    "accentColor": "#F59E0B",
-    "backgroundColor": "#0A0A0A",
-    "textColor": "#FFFFFF",
-    "fontHeading": "Inter",
-    "fontBody": "Inter",
-    "fontMono": "JetBrains Mono",
-    "logoPath": null,
-    "logoPosition": "top-left",
-    "language": "de"
-  },
-  "preferences": {
-    "subtitlesEnabled": true,
-    "subtitlesLanguage": "de",
-    "defaultAspectRatio": "16:9",
-    "outputDirectory": "./output"
-  },
-  "setupComplete": false
-}
-EOF
+    cp "$REPO_ROOT/brand.config.example.json" "$CONFIG_DIR/brand.config.json"
+    echo -e "${GREEN}✅ brand.config.json angelegt (Default-Werte aus brand.config.example.json)${NC}"
+else
+    echo -e "${YELLOW}ℹ️  brand.config.json existiert bereits. Überspringe.${NC}"
 fi
-echo -e "${GREEN}✅ Konfiguration bereit${NC}"
 echo ""
 
 echo "╔══════════════════════════════════════════════════════════╗"

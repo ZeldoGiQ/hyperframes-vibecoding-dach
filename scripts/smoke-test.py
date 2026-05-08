@@ -14,12 +14,15 @@ Aufruf: python3 scripts/smoke-test.py
 import json
 import os
 import re
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
 TEMPLATES_DIR = ROOT / "templates"
 TEMPLATES_INDEX = ROOT / "templates.json"
+RENDERER_DIR = ROOT / "renderer"
 
 # Farben
 GREEN = '\033[0;32m'
@@ -163,6 +166,47 @@ try:
     info(f"Test-Output: {output}")
 except Exception as e:
     err(f"Render-Test fehlgeschlagen: {e}")
+
+# 5. Renderer-Test
+section("5. Renderer prüfen")
+
+renderer_pkg = RENDERER_DIR / "package.json"
+renderer_js = RENDERER_DIR / "render.js"
+renderer_modules = RENDERER_DIR / "node_modules"
+
+if not renderer_pkg.exists():
+    err(f"renderer/package.json fehlt: {renderer_pkg}")
+else:
+    ok("renderer/package.json gefunden")
+
+if not renderer_js.exists():
+    err(f"renderer/render.js fehlt: {renderer_js}")
+else:
+    ok("renderer/render.js gefunden")
+
+if not renderer_modules.exists():
+    warn("renderer/node_modules fehlt – führe 'cd renderer && npm install' aus, um den Renderer nutzbar zu machen")
+else:
+    ok("renderer/node_modules vorhanden")
+    # Trockenlauf: --help darf nicht crashen
+    if renderer_js.exists() and shutil.which("node"):
+        try:
+            result = subprocess.run(
+                ["node", str(renderer_js), "--help"],
+                capture_output=True, text=True, timeout=15, cwd=str(RENDERER_DIR)
+            )
+            if result.returncode == 0 and "Hyperframes" in (result.stdout + result.stderr):
+                ok("renderer --help läuft fehlerfrei")
+            else:
+                warn(f"renderer --help unerwartete Ausgabe (Exit {result.returncode})")
+        except subprocess.TimeoutExpired:
+            warn("renderer --help: Timeout (15s)")
+        except FileNotFoundError:
+            warn("node nicht im PATH")
+        except Exception as e:
+            warn(f"renderer --help: {e}")
+    else:
+        info("Skippe --help-Trockenlauf (node nicht gefunden oder render.js fehlt)")
 
 # Zusammenfassung
 section("Zusammenfassung")

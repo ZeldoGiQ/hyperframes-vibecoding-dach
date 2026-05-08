@@ -29,7 +29,7 @@ https://github.com/ZeldoGiQ/hyperframes-vibecoding-dach
 Mach alles automatisch:
 1. Repo klonen
 2. Dependencies prüfen und ggf. nachinstallieren  
-3. Hyperframes installieren
+3. Lokalen Renderer installieren (cd renderer && npm install)
 4. SKILL.md registrieren
 5. Brand-Wizard starten
 ```
@@ -65,11 +65,11 @@ Das Addon installiert/prüft folgende Komponenten:
 
 | Komponente | Warum brauchst du das? |
 |-----------|----------------------|
-| **Hyperframes** | Das eigentliche Video-Tool |
-| **Node.js** | Damit Hyperframes läuft |
-| **Python 3.11+** | Für Faster Whisper |
-| **Faster Whisper** | Erstellt Untertitel aus Audio |
-| **ffmpeg** | Schneidet & konvertiert Videos |
+| **Node.js (≥ 18)** | Für den lokalen Renderer |
+| **Puppeteer + Chromium** | Headless-Browser für Frame-Capturing (~150 MB, einmalig via npm) |
+| **ffmpeg** | Packt die Frames zu einer MP4 |
+| **Python 3.11+** | Für Faster Whisper (optional) |
+| **Faster Whisper** | Erstellt Untertitel aus Audio (geplant für v1.2) |
 | **Git** | Lädt Updates automatisch |
 
 Wenn was fehlt, sagt dir Claude genau wie du es nachinstallierst.
@@ -82,10 +82,11 @@ Nach der Installation sind die Dateien hier:
 
 | Was | Wo |
 |-----|-----|
-| Addon-Code | `~/hyperframes-vbc/` |
+| Addon-Code (Repo + Templates) | Dort wo du `git clone` ausgeführt hast |
+| Renderer | `<REPO>/renderer/` (`render.js`, `node_modules/`, …) |
 | Brand-Config | `~/.hyperframes-vbc/brand.config.json` |
 | Deine Logos | `~/.hyperframes-vbc/assets/` |
-| Fertige Videos | `./output/` (im Arbeitsverzeichnis) |
+| Fertige Videos | `./output/` (im Arbeitsverzeichnis, von dem aus du Claude startest) |
 
 ---
 

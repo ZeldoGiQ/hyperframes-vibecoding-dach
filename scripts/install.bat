@@ -4,23 +4,30 @@ chcp 65001 >nul
 
 REM ============================================================
 REM   Hyperframes Addon by Vibe Coding DACH - Windows Installer
+REM   Lokaler Renderer (Puppeteer + ffmpeg) - v1.1.0
 REM ============================================================
 
 echo.
 echo ╔══════════════════════════════════════════════════════════╗
 echo ║                                                          ║
 echo ║   🎬 Hyperframes Addon by Vibe Coding DACH               ║
-echo ║   Installation startet...                                ║
+echo ║   Installation startet... (v1.1.0 - lokaler Renderer)    ║
 echo ║                                                          ║
 echo ╚══════════════════════════════════════════════════════════╝
 echo.
 
-set "INSTALL_DIR=%USERPROFILE%\hyperframes-vbc"
+REM Repo-Root = ein Level ueber scripts\
+set "SCRIPT_DIR=%~dp0"
+set "REPO_ROOT=%SCRIPT_DIR%.."
+pushd "%REPO_ROOT%" >nul
+set "REPO_ROOT=%CD%"
+popd >nul
+set "RENDERER_DIR=%REPO_ROOT%\renderer"
 set "CONFIG_DIR=%USERPROFILE%\.hyperframes-vbc"
 set "ERRORS=0"
 
 REM --- Schritt 1: Dependency-Check ---
-echo [1/6] System-Check läuft...
+echo [1/5] System-Check laeuft...
 echo.
 
 where node >nul 2>nul
@@ -68,82 +75,57 @@ if %ERRORS% gtr 0 (
 )
 
 REM --- Schritt 2: Verzeichnisse anlegen ---
-echo [2/6] Verzeichnisse werden angelegt...
-if not exist "%INSTALL_DIR%" mkdir "%INSTALL_DIR%"
+echo [2/5] Verzeichnisse werden angelegt...
 if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
 if not exist "%CONFIG_DIR%\assets" mkdir "%CONFIG_DIR%\assets"
 echo ✅ Verzeichnisse bereit
 echo.
 
-REM --- Schritt 3: Hyperframes klonen ---
-echo [3/6] Hyperframes wird heruntergeladen...
-if not exist "%INSTALL_DIR%\hyperframes" (
-    cd /d "%INSTALL_DIR%"
-    git clone https://github.com/heygen/hyperframes.git
-    if %errorlevel% neq 0 (
-        echo ❌ Konnte Hyperframes nicht klonen.
-        echo    Prüfe deine Internet-Verbindung.
-        pause
-        exit /b 1
-    )
-) else (
-    echo ℹ️  Hyperframes ist schon installiert. Überspringe.
-)
-echo ✅ Hyperframes bereit
+REM --- Schritt 3: Renderer (Puppeteer + ffmpeg-Wrapper) ---
+echo [3/5] Lokaler Renderer wird installiert...
+echo     Hinweis: Beim ersten Mal laedt Puppeteer ca. 150 MB Chromium herunter.
+echo     Das passiert nur einmal und braucht 1-3 Minuten je nach Internet.
 echo.
 
-REM --- Schritt 4: NPM Dependencies ---
-echo [4/6] Node-Pakete werden installiert (kann 1-2 Minuten dauern)...
-cd /d "%INSTALL_DIR%\hyperframes"
-call npm install --silent
-if %errorlevel% neq 0 (
-    echo ❌ npm install fehlgeschlagen.
+if not exist "%RENDERER_DIR%\package.json" (
+    echo ❌ renderer\package.json nicht gefunden unter: %RENDERER_DIR%
+    echo    Bist du sicher, dass du im hyperframes-vibecoding-dach-Repo bist?
     pause
     exit /b 1
 )
-echo ✅ Node-Pakete installiert
+
+pushd "%RENDERER_DIR%"
+call npm install --no-audit --no-fund
+if %errorlevel% neq 0 (
+    echo ❌ npm install fehlgeschlagen.
+    popd
+    pause
+    exit /b 1
+)
+popd
+echo ✅ Renderer installiert
 echo.
 
-REM --- Schritt 5: Faster Whisper ---
-echo [5/6] Faster Whisper wird installiert...
+REM --- Schritt 4: Faster Whisper (optional) ---
+echo [4/5] Faster Whisper wird installiert (optional, fuer Subtitles)...
 pip install faster-whisper --quiet
 if %errorlevel% neq 0 (
     echo ⚠️  Faster Whisper konnte nicht installiert werden.
-    echo    Du kannst es später manuell nachinstallieren.
+    echo     Nicht schlimm - Subtitle-Features sind erst in v1.2 geplant.
+    echo     Du kannst es spaeter nachholen mit: pip install faster-whisper
+) else (
+    echo ✅ Faster Whisper bereit
 )
-echo ✅ Faster Whisper bereit
 echo.
 
-REM --- Schritt 6: Brand-Config anlegen (Default) ---
-echo [6/6] Standard-Konfiguration wird erstellt...
+REM --- Schritt 5: Brand-Config anlegen (Default) ---
+echo [5/5] Standard-Konfiguration wird erstellt...
 if not exist "%CONFIG_DIR%\brand.config.json" (
-    (
-    echo {
-    echo   "version": "1.0",
-    echo   "brand": {
-    echo     "name": "Meine Marke",
-    echo     "primaryColor": "#0EA5E9",
-    echo     "accentColor": "#F59E0B",
-    echo     "backgroundColor": "#0A0A0A",
-    echo     "textColor": "#FFFFFF",
-    echo     "fontHeading": "Inter",
-    echo     "fontBody": "Inter",
-    echo     "fontMono": "JetBrains Mono",
-    echo     "logoPath": null,
-    echo     "logoPosition": "top-left",
-    echo     "language": "de"
-    echo   },
-    echo   "preferences": {
-    echo     "subtitlesEnabled": true,
-    echo     "subtitlesLanguage": "de",
-    echo     "defaultAspectRatio": "16:9",
-    echo     "outputDirectory": "./output"
-    echo   },
-    echo   "setupComplete": false
-    echo }
-    ) > "%CONFIG_DIR%\brand.config.json"
+    copy /y "%REPO_ROOT%\brand.config.example.json" "%CONFIG_DIR%\brand.config.json" >nul
+    echo ✅ brand.config.json angelegt ^(Default-Werte aus brand.config.example.json^)
+) else (
+    echo ℹ️  brand.config.json existiert bereits. Ueberspringe.
 )
-echo ✅ Konfiguration bereit
 echo.
 
 REM --- Fertig ---
@@ -151,11 +133,11 @@ echo ╔════════════════════════
 echo ║                                                          ║
 echo ║   🎉 Installation erfolgreich!                           ║
 echo ║                                                          ║
-echo ║   Nächster Schritt: Sag Claude Code:                     ║
+echo ║   Naechster Schritt: Sag Claude Code:                    ║
 echo ║   "Starte den Brand-Wizard"                              ║
 echo ║                                                          ║
 echo ║   Oder direkt:                                           ║
-echo ║   "Mach mir ein News-Intro über AI"                      ║
+echo ║   "Mach mir ein News-Intro ueber AI"                     ║
 echo ║                                                          ║
 echo ╚══════════════════════════════════════════════════════════╝
 echo.
