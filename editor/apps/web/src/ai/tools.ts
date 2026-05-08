@@ -1,5 +1,15 @@
 import { z } from "zod";
 
+export const OVERLAY_TEMPLATE_IDS = [
+	"lower-third",
+	"title-card",
+	"logo-watermark",
+	"subtitle-card",
+	"cta-banner",
+	"logo-reveal",
+	"endcard",
+] as const;
+
 export const editorGetStateSchema = z.object({});
 
 export const editorCutSchema = z.object({
@@ -45,6 +55,72 @@ export const editorAddClipSchema = z.object({
 		),
 });
 
+export const editorListTemplatesSchema = z.object({});
+
+export const editorAddOverlaySchema = z.object({
+	template: z
+		.enum(OVERLAY_TEMPLATE_IDS)
+		.describe(
+			"Template id. Use editor.listTemplates to discover the schema (variables + styleVars) for each.",
+		),
+	vars: z
+		.record(z.string(), z.union([z.string(), z.number()]))
+		.describe(
+			"Template-specific variables (e.g. NAME, TITLE for lower-third). Keys are UPPERCASE.",
+		),
+	startSeconds: z
+		.number()
+		.nonnegative()
+		.optional()
+		.describe(
+			"Where to place the overlay on the timeline, in seconds. Defaults to the current playhead position.",
+		),
+	durationSeconds: z
+		.number()
+		.positive()
+		.optional()
+		.describe(
+			"How long the overlay is on screen, in seconds. Defaults to the template's recommended duration.",
+		),
+	styleVars: z
+		.record(z.string(), z.string())
+		.optional()
+		.describe(
+			"Optional CSS variable overrides (e.g. {'--primary-color': '#FF0000'}). Discoverable via editor.listTemplates.",
+		),
+});
+
+export const editorModifyOverlaySchema = z.object({
+	overlayId: z
+		.string()
+		.optional()
+		.describe(
+			"Element id of the overlay to modify. If omitted, the most recently added overlay is patched.",
+		),
+	vars: z
+		.record(z.string(), z.union([z.string(), z.number()]))
+		.optional()
+		.describe("Template variable patch (merged into the existing vars)."),
+	styleVars: z
+		.record(z.string(), z.string())
+		.optional()
+		.describe("CSS variable patch (merged into the existing styleVars)."),
+	durationSeconds: z
+		.number()
+		.positive()
+		.optional()
+		.describe("Optional new on-screen duration, in seconds."),
+});
+
+export const editorRemoveOverlaySchema = z.object({
+	overlayId: z
+		.string()
+		.optional()
+		.describe(
+			"Element id of the overlay to remove. If omitted, the most recently added overlay is removed.",
+		),
+});
+
 export const editorToolDefinitions = {
 	"editor.getState": {
 		description:
@@ -66,6 +142,26 @@ export const editorToolDefinitions = {
 			"Insert a media clip onto the timeline at the given timestamp. The media asset must already be imported.",
 		schema: editorAddClipSchema,
 	},
+	"editor.listTemplates": {
+		description:
+			"List all available overlay templates with their variables, default duration, and styleVars (CSS-variable overrides). Always call this before editor.addOverlay if you are unsure which template fits the user's request.",
+		schema: editorListTemplatesSchema,
+	},
+	"editor.addOverlay": {
+		description:
+			"Render an overlay template (e.g. lower-third, title-card, logo-watermark) as a transparent WebM and place it on a fresh overlay track. If startSeconds is omitted, the current playhead position is used. If durationSeconds is omitted, the template's default is used. styleVars (e.g. '--primary-color': '#ff0000') override the template's defaults. Rendering takes a few seconds — do not chain multiple addOverlay calls in parallel; wait for one to complete before issuing the next.",
+		schema: editorAddOverlaySchema,
+	},
+	"editor.modifyOverlay": {
+		description:
+			"Patch an existing overlay's variables, styleVars, or duration. Triggers a re-render of the overlay's WebM (a few seconds). If overlayId is omitted, the most recently added overlay is patched. Use this for 'change the color to red', 'make it 6 seconds long', 'rename to Hannes Müller' etc.",
+		schema: editorModifyOverlaySchema,
+	},
+	"editor.removeOverlay": {
+		description:
+			"Remove an overlay from the timeline. If overlayId is omitted, the most recently added overlay is removed.",
+		schema: editorRemoveOverlaySchema,
+	},
 } as const;
 
 export type EditorToolName = keyof typeof editorToolDefinitions;
@@ -75,6 +171,10 @@ export const EDITOR_TOOL_NAMES = [
 	"editor.cut",
 	"editor.trim",
 	"editor.addClip",
+	"editor.listTemplates",
+	"editor.addOverlay",
+	"editor.modifyOverlay",
+	"editor.removeOverlay",
 ] as const satisfies readonly EditorToolName[];
 
 export function isEditorToolName(value: string): value is EditorToolName {

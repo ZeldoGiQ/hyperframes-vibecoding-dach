@@ -9,7 +9,30 @@ const TOOL_LABELS: Record<string, string> = {
 	"editor.cut": "Cutting timeline",
 	"editor.trim": "Trimming clip",
 	"editor.addClip": "Adding clip",
+	"editor.listTemplates": "Listing overlay templates",
+	"editor.addOverlay": "Rendering overlay",
+	"editor.modifyOverlay": "Re-rendering overlay",
+	"editor.removeOverlay": "Removing overlay",
 };
+
+interface OverlayOutputResult {
+	ok?: boolean;
+	result?: {
+		cached?: boolean;
+		renderMs?: number;
+	};
+}
+
+function readOverlayMeta(output: unknown): {
+	cached: boolean;
+	renderMs?: number;
+} | null {
+	if (typeof output !== "object" || output === null) return null;
+	const result = (output as OverlayOutputResult).result;
+	if (!result) return null;
+	if (typeof result.cached !== "boolean") return null;
+	return { cached: result.cached, renderMs: result.renderMs };
+}
 
 function statusBadge(state: AnyToolPart["state"]): {
 	label: string;
@@ -60,6 +83,9 @@ export function ToolCallDisplay({ part }: { part: AnyToolPart }) {
 			? part.errorText
 			: null;
 
+	const overlayMeta =
+		part.state === "output-available" ? readOverlayMeta(output) : null;
+
 	return (
 		<div className="border bg-muted/40 rounded-md p-2 text-xs space-y-1">
 			<div className="flex items-center justify-between gap-2">
@@ -69,6 +95,19 @@ export function ToolCallDisplay({ part }: { part: AnyToolPart }) {
 				</span>
 			</div>
 			<div className="text-muted-foreground">{label}</div>
+			{overlayMeta && (
+				<div className="flex items-center gap-2 text-[10px]">
+					{overlayMeta.cached ? (
+						<span className="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
+							Cached
+						</span>
+					) : (
+						<span className="px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-700 dark:text-blue-400">
+							Rendered{overlayMeta.renderMs != null ? ` in ${(overlayMeta.renderMs / 1000).toFixed(1)}s` : ""}
+						</span>
+					)}
+				</div>
+			)}
 			{input != null && (
 				<details className="text-[11px]">
 					<summary className="cursor-pointer text-muted-foreground hover:text-foreground">

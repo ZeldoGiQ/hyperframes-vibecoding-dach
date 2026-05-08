@@ -10,11 +10,23 @@ import {
 } from "./time-utils";
 import {
 	editorAddClipSchema,
+	editorAddOverlaySchema,
 	editorCutSchema,
 	editorGetStateSchema,
+	editorListTemplatesSchema,
+	editorModifyOverlaySchema,
+	editorRemoveOverlaySchema,
 	editorTrimSchema,
 	isEditorToolName,
 } from "./tools";
+import {
+	getMostRecentOverlay,
+	listOverlays,
+	registerOverlay,
+	resolveOverlay,
+	unregisterOverlay,
+	type OverlayRegistryEntry,
+} from "./overlay-registry";
 
 export interface ToolCallInput {
 	toolName: string;
@@ -239,10 +251,356 @@ function addClipImpl(args: unknown): ToolCallResult {
 	});
 }
 
-export function executeEditorTool({
+// --- Overlay tools (async) ----------------------------------------------
+
+const RENDER_TIMEOUT_MS = 60_000;
+const POLL_INTERVAL_MS = 400;
+
+interface RenderJobResult {
+	jobId: string;
+	hash: string;
+	fileUrl: string;
+	cached: boolean;
+	durationMs: number;
+}
+
+interface JobStatePayload {
+	id: string;
+	status: "queued" | "running" | "done" | "error";
+	progress: number;
+	hash: string;
+	fileUrl?: string;
+	error?: string;
+	startedAt: number;
+	finishedAt?: number;
+}
+
+async function renderOverlayJob({
+	template,
+	vars,
+	durationSeconds,
+	styleVars,
+}: {
+	template: string;
+	vars: Record<string, string | number>;
+	durationSeconds: number;
+	styleVars: Record<string, string>;
+}): Promise<RenderJobResult> {
+	const t0 = performance.now();
+	const startResp = await fetch("/api/overlays/render", {
+		method: "POST",
+		headers: { "content-type": "application/json" },
+		body: JSON.stringify({ template, vars, durationSeconds, styleVars }),
+	});
+	if (!startResp.ok) {
+		const errorBody: unknown = await startResp.json().catch(() => null);
+		let errMsg = `render endpoint returned ${startResp.status}`;
+		if (
+			errorBody &&
+			typeof errorBody === "object" &&
+			"error" in errorBody
+		) {
+			const errVal = (errorBody as { error?: unknown }).error;
+			if (typeof errVal === "string") errMsg = errVal;
+		}
+		throw new Error(errMsg);
+	}
+	const startBody: { jobId: string; hash: string } = await startResp.json();
+	const { jobId, hash } = startBody;
+
+	const deadline = Date.now() + RENDER_TIMEOUT_MS;
+	while (Date.now() < deadline) {
+		const stateResp = await fetch(`/api/overlays/jobs/${jobId}`);
+		if (!stateResp.ok) {
+			throw new Error(`job lookup failed (${stateResp.status})`);
+		}
+		const state: JobStatePayload = await stateResp.json();
+		if (state.status === "done" && state.fileUrl) {
+			const durationMs = performance.now() - t0;
+			return {
+				jobId,
+				hash,
+				fileUrl: state.fileUrl,
+				cached: durationMs < 500, // cache hits resolve in ~1ms
+				durationMs,
+			};
+		}
+		if (state.status === "error") {
+			throw new Error(state.error ?? "render failed");
+		}
+		await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+	}
+	throw new Error(`render timed out after ${RENDER_TIMEOUT_MS}ms`);
+}
+
+async function fileFromUrl({
+	url,
+	name,
+}: {
+	url: string;
+	name: string;
+}): Promise<File> {
+	const resp = await fetch(url);
+	if (!resp.ok) {
+		throw new Error(`failed to fetch overlay file (${resp.status})`);
+	}
+	const blob = await resp.blob();
+	return new File([blob], name, { type: "video/webm" });
+}
+
+async function listTemplatesImpl(): Promise<ToolCallResult> {
+	const resp = await fetch("/api/overlays/templates");
+	if (!resp.ok) {
+		return fail(`templates endpoint returned ${resp.status}`);
+	}
+	const data: unknown = await resp.json();
+	return succeed(data);
+}
+
+async function addOverlayImpl(args: unknown): Promise<ToolCallResult> {
+	const parsed = editorAddOverlaySchema.safeParse(args);
+	if (!parsed.success) {
+		return fail(`Invalid arguments for editor.addOverlay: ${parsed.error.message}`);
+	}
+	const editor = EditorCore.getInstance();
+	const project = editor.project.getActive();
+	const scene = editor.scenes.getActiveSceneOrNull();
+	if (!scene) return fail("No active scene. Open or create a project first.");
+
+	const playheadSeconds = mediaTimeToSecondsRounded({
+		time: editor.playback.getCurrentTime(),
+	});
+	const startSeconds = parsed.data.startSeconds ?? playheadSeconds;
+	const styleVars = parsed.data.styleVars ?? {};
+
+	// Load template meta to fall back to its recommended duration.
+	const tmplResp = await fetch("/api/overlays/templates");
+	if (!tmplResp.ok) {
+		return fail(`could not load template list (${tmplResp.status})`);
+	}
+	const tmplData: {
+		templates: Array<{ id: string; duration: number; name: string }>;
+	} = await tmplResp.json();
+	const meta = tmplData.templates.find(
+		(t) => t.id === parsed.data.template,
+	);
+	if (!meta) {
+		return fail(`template "${parsed.data.template}" not found`);
+	}
+	const durationSeconds =
+		parsed.data.durationSeconds ?? meta.duration;
+
+	let render: RenderJobResult;
+	try {
+		render = await renderOverlayJob({
+			template: parsed.data.template,
+			vars: parsed.data.vars,
+			durationSeconds,
+			styleVars,
+		});
+	} catch (err) {
+		return fail(err instanceof Error ? err.message : String(err));
+	}
+
+	const file = await fileFromUrl({
+		url: render.fileUrl,
+		name: `${parsed.data.template}-${render.hash}.webm`,
+	});
+	const asset = await editor.media.addMediaAsset({
+		projectId: project.metadata.id,
+		asset: {
+			file,
+			name: meta.name,
+			type: "video",
+			duration: durationSeconds,
+			width: 1920,
+			height: 1080,
+			hasAudio: false,
+		},
+	});
+	if (!asset) {
+		return fail("failed to register overlay media asset");
+	}
+
+	const trackId = editor.timeline.addTrack({ type: "video" });
+	const startTime = mediaTimeFromSeconds({ seconds: startSeconds });
+	const duration = mediaTimeFromSeconds({ seconds: durationSeconds });
+	const element = buildElementFromMedia({
+		mediaId: asset.id,
+		mediaType: "video",
+		name: meta.name,
+		duration,
+		startTime,
+	});
+	editor.timeline.insertElement({
+		element,
+		placement: { mode: "explicit", trackId },
+	});
+
+	// Find the freshly-inserted element id so we can register it.
+	const refreshedScene = editor.scenes.getActiveScene();
+	const refreshedTrack = refreshedScene.tracks.overlay.find(
+		(t) => t.id === trackId,
+	);
+	const insertedId = refreshedTrack?.elements[0]?.id;
+	if (!insertedId) {
+		return fail("inserted overlay element could not be located");
+	}
+
+	const stringVars: Record<string, string> = {};
+	for (const [k, v] of Object.entries(parsed.data.vars)) {
+		stringVars[k] = String(v);
+	}
+	const entry: OverlayRegistryEntry = {
+		elementId: insertedId,
+		trackId,
+		template: parsed.data.template,
+		vars: stringVars,
+		styleVars,
+		durationSeconds,
+		mediaId: asset.id,
+		createdAt: Date.now(),
+	};
+	registerOverlay(entry);
+
+	return succeed({
+		overlayId: insertedId,
+		template: parsed.data.template,
+		startSeconds,
+		durationSeconds,
+		cached: render.cached,
+		renderMs: Math.round(render.durationMs),
+		trackId,
+	});
+}
+
+async function modifyOverlayImpl(args: unknown): Promise<ToolCallResult> {
+	const parsed = editorModifyOverlaySchema.safeParse(args);
+	if (!parsed.success) {
+		return fail(
+			`Invalid arguments for editor.modifyOverlay: ${parsed.error.message}`,
+		);
+	}
+	const existing = resolveOverlay({ overlayId: parsed.data.overlayId });
+	if (!existing) {
+		return fail(
+			parsed.data.overlayId
+				? `overlay ${parsed.data.overlayId} not found`
+				: "no overlays on the timeline yet — add one first with editor.addOverlay",
+		);
+	}
+
+	const editor = EditorCore.getInstance();
+	const project = editor.project.getActive();
+
+	const newVars: Record<string, string> = { ...existing.vars };
+	if (parsed.data.vars) {
+		for (const [k, v] of Object.entries(parsed.data.vars)) {
+			newVars[k] = String(v);
+		}
+	}
+	const newStyleVars: Record<string, string> = {
+		...existing.styleVars,
+		...(parsed.data.styleVars ?? {}),
+	};
+	const newDuration =
+		parsed.data.durationSeconds ?? existing.durationSeconds;
+
+	let render: RenderJobResult;
+	try {
+		render = await renderOverlayJob({
+			template: existing.template,
+			vars: newVars,
+			durationSeconds: newDuration,
+			styleVars: newStyleVars,
+		});
+	} catch (err) {
+		return fail(err instanceof Error ? err.message : String(err));
+	}
+
+	const file = await fileFromUrl({
+		url: render.fileUrl,
+		name: `${existing.template}-${render.hash}.webm`,
+	});
+	const asset = await editor.media.addMediaAsset({
+		projectId: project.metadata.id,
+		asset: {
+			file,
+			name: existing.template,
+			type: "video",
+			duration: newDuration,
+			width: 1920,
+			height: 1080,
+			hasAudio: false,
+		},
+	});
+	if (!asset) {
+		return fail("failed to register re-rendered overlay media asset");
+	}
+
+	const newDurationMt = mediaTimeFromSeconds({ seconds: newDuration });
+	editor.timeline.updateElements({
+		updates: [
+			{
+				trackId: existing.trackId,
+				elementId: existing.elementId,
+				patch: {
+					mediaId: asset.id,
+					duration: newDurationMt,
+				},
+			},
+		],
+	});
+
+	registerOverlay({
+		...existing,
+		vars: newVars,
+		styleVars: newStyleVars,
+		durationSeconds: newDuration,
+		mediaId: asset.id,
+	});
+
+	return succeed({
+		overlayId: existing.elementId,
+		template: existing.template,
+		patchedVars: parsed.data.vars ?? null,
+		patchedStyleVars: parsed.data.styleVars ?? null,
+		durationSeconds: newDuration,
+		cached: render.cached,
+		renderMs: Math.round(render.durationMs),
+	});
+}
+
+async function removeOverlayImpl(args: unknown): Promise<ToolCallResult> {
+	const parsed = editorRemoveOverlaySchema.safeParse(args);
+	if (!parsed.success) {
+		return fail(
+			`Invalid arguments for editor.removeOverlay: ${parsed.error.message}`,
+		);
+	}
+	const existing = resolveOverlay({ overlayId: parsed.data.overlayId });
+	if (!existing) {
+		return fail("no overlays on the timeline yet");
+	}
+	const editor = EditorCore.getInstance();
+	editor.timeline.deleteElements({
+		elements: [
+			{ trackId: existing.trackId, elementId: existing.elementId },
+		],
+	});
+	unregisterOverlay({ elementId: existing.elementId });
+	return succeed({
+		removedOverlayId: existing.elementId,
+		template: existing.template,
+	});
+}
+
+// --- Public dispatcher --------------------------------------------------
+
+export async function executeEditorTool({
 	toolName,
 	args,
-}: ToolCallInput): ToolCallResult {
+}: ToolCallInput): Promise<ToolCallResult> {
 	if (!isEditorToolName(toolName)) {
 		return fail(`Unknown tool: ${toolName}`);
 	}
@@ -256,5 +614,22 @@ export function executeEditorTool({
 			return trimImpl(args);
 		case "editor.addClip":
 			return addClipImpl(args);
+		case "editor.listTemplates":
+			editorListTemplatesSchema.parse(args ?? {});
+			return listTemplatesImpl();
+		case "editor.addOverlay":
+			return addOverlayImpl(args);
+		case "editor.modifyOverlay":
+			return modifyOverlayImpl(args);
+		case "editor.removeOverlay":
+			return removeOverlayImpl(args);
 	}
+}
+
+export function debugListOverlays(): OverlayRegistryEntry[] {
+	return listOverlays();
+}
+
+export function debugMostRecentOverlay(): OverlayRegistryEntry | undefined {
+	return getMostRecentOverlay();
 }

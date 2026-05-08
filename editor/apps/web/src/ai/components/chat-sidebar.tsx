@@ -14,6 +14,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { executeEditorTool } from "@/ai/tool-executor";
 import { ToolCallDisplay } from "./tool-call-display";
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null;
+}
+
 export function ChatSidebar() {
 	const [input, setInput] = useState("");
 	const [submitError, setSubmitError] = useState<string | null>(null);
@@ -28,72 +32,74 @@ export function ChatSidebar() {
 				toolCallId: toolCall.toolCallId,
 				input: toolCall.input,
 			});
-			let result: ReturnType<typeof executeEditorTool>;
-			try {
-				result = executeEditorTool({
-					toolName: toolCall.toolName,
-					args: toolCall.input,
-				});
-				console.log(
-					"[ai] tool result",
-					toolCall.toolName,
-					"ok=",
-					result.ok,
-				);
-			} catch (err) {
-				console.error("[ai] tool call threw", toolCall.toolName, err);
-				result = {
-					ok: false,
-					error: err instanceof Error ? err.message : String(err),
-				};
-			}
-			let safeOutput: unknown;
-			try {
-				safeOutput = JSON.parse(JSON.stringify(result));
-			} catch (err) {
-				console.error("[ai] result not JSON-serializable", err);
-				safeOutput = {
-					ok: false,
-					error: "tool result was not JSON-serializable",
-				};
-			}
-
-			console.log("[ai] calling addToolOutput", toolCall.toolCallId);
-			const isError =
-				typeof safeOutput === "object" &&
-				safeOutput !== null &&
-				"ok" in safeOutput &&
-				(safeOutput as { ok: unknown }).ok === false;
-
-			const addPromise = isError
-				? addToolOutput({
-						tool: toolCall.toolName,
-						toolCallId: toolCall.toolCallId,
-						state: "output-error",
-						errorText:
-							(safeOutput as { error?: string }).error ?? "tool failed",
-					})
-				: addToolOutput({
-						tool: toolCall.toolName,
-						toolCallId: toolCall.toolCallId,
-						output: safeOutput,
+			// Execute asynchronously so the SDK's job queue is not blocked.
+			// addToolOutput is fire-and-forget too — the SDK's
+			// SerialJobExecutor would deadlock if we awaited it from here.
+			void (async () => {
+				let result: Awaited<ReturnType<typeof executeEditorTool>>;
+				try {
+					result = await executeEditorTool({
+						toolName: toolCall.toolName,
+						args: toolCall.input,
 					});
-
-			Promise.resolve(addPromise)
-				.then(() => {
 					console.log(
-						"[ai] addToolOutput resolved for",
-						toolCall.toolCallId,
+						"[ai] tool result",
+						toolCall.toolName,
+						"ok=",
+						result.ok,
 					);
-				})
-				.catch((err: unknown) => {
-					console.error("[ai] addToolOutput rejected", err);
-				});
+				} catch (err) {
+					console.error("[ai] tool call threw", toolCall.toolName, err);
+					result = {
+						ok: false,
+						error: err instanceof Error ? err.message : String(err),
+					};
+				}
 
-			console.log(
-				"[ai] onToolCall returning (not awaiting addToolOutput) for",
-				toolCall.toolCallId,
-			);
+				let safeOutput: unknown;
+				try {
+					safeOutput = JSON.parse(JSON.stringify(result));
+				} catch (err) {
+					console.error("[ai] result not JSON-serializable", err);
+					safeOutput = {
+						ok: false,
+						error: "tool result was not JSON-serializable",
+					};
+				}
+
+				let isError = false;
+				let errorText = "tool failed";
+				if (isRecord(safeOutput) && safeOutput.ok === false) {
+					isError = true;
+					if (typeof safeOutput.error === "string") {
+						errorText = safeOutput.error;
+					}
+				}
+
+				const addPromise = isError
+					? addToolOutput({
+							tool: toolCall.toolName,
+							toolCallId: toolCall.toolCallId,
+							state: "output-error",
+							errorText,
+						})
+					: addToolOutput({
+							tool: toolCall.toolName,
+							toolCallId: toolCall.toolCallId,
+							output: safeOutput,
+						});
+
+				Promise.resolve(addPromise)
+					.then(() => {
+						console.log(
+							"[ai] addToolOutput resolved for",
+							toolCall.toolCallId,
+						);
+					})
+					.catch((err: unknown) => {
+						console.error("[ai] addToolOutput rejected", err);
+					});
+			})();
 		},
 		onError: (err) => {
 			console.error("[ai] chat error", err);
