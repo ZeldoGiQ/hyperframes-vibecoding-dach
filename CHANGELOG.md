@@ -4,6 +4,73 @@ All notable changes to AIVC DACH.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## v3.0.0-alpha.2 – 2026-05-11 · AI layer + overlay engine
+
+End-to-end: the user types a prompt in the chat sidebar, the AI plans on the timeline, calls editor tools, and either renders a built-in overlay template or designs a fresh one from HTML/CSS — all composited transparently over the footage.
+
+### Added — AI layer (cut/trim/clip)
+- **`editor/apps/web/src/ai/`** — Vercel AI SDK 6 integration:
+  - `tools.ts` — Zod schemas for ten tools shared between server and client.
+  - `tool-executor.ts` — client-side execution against `EditorCore.getInstance()`. Mutations go through OpenCut's command pattern (`splitElements`, `updateElements`, `insertElement`, `addTrack`, `deleteElements`), so undo/redo Just Works.
+  - `selection-resolver.ts` — for `editor.cut`, finds all clips active at a timestamp across video, audio, overlay tracks. Default: skip muted audio + hidden visual tracks.
+  - `time-utils.ts` — seconds ↔ `MediaTime` (WASM tick) conversion at the boundary.
+  - `provider.ts` — Anthropic (default), Google (Gemini), OpenAI, Ollama selectable via `AIVC_AI_PROVIDER`. No hardcoded model names — `ANTHROPIC_MODEL`, `GEMINI_MODEL`, `OPENAI_MODEL`, `OLLAMA_MODEL` env vars. Missing key/model → German error with a link to the provider's docs.
+  - `overlay-registry.ts` — `Map<elementId, {template, vars, styleVars, customHtml, mediaId, …}>` pinned on `globalThis` so modify/remove tools can find overlays even after Next.js dev module isolation.
+  - `components/chat-sidebar.tsx` + `components/tool-call-display.tsx` — collapsible right-side chat panel with streaming, tool-call visualisation (status, input/output JSON, "Cached" vs "Rendered in X.Xs" badge), error surfacing.
+- **`/api/ai/chat`** — Next.js route handler using `streamText`. Returns 400 + structured error if the selected provider is misconfigured.
+- **`.env.example`** — `AIVC_AI_PROVIDER` + per-provider `*_API_KEY` / `*_MODEL` pairs with links to each provider's model docs.
+- **Editor page**: prominent neon-green "AI Chat" toggle (top-right of preview area) opens the sidebar; close button collapses it.
+
+### Added — Overlay engine
+- **`generator/overlays/`** — seven transparent-background overlay templates with `meta.json` (variables, styleVars, default duration) and `template.html` (CSS-only animations, single Inter font):
+  - `lower-third`, `title-card`, `logo-watermark`, `subtitle-card`, `cta-banner`, `logo-reveal`, `endcard`.
+- **`editor/apps/web/src/services/overlay-renderer/`** — HTTP-driven render pipeline:
+  - Puppeteer headless Chrome captures frames at 30 fps with `omitBackground: true`.
+  - Web Animations API is paused and stepped per frame for deterministic output.
+  - `ffmpeg-static` encodes to **WebM with VP8 alpha** (`libvpx -pix_fmt yuva420p -auto-alt-ref 0 -crf 18 -metadata:s:v:0 alpha_mode=1`). VP8 because mediabunny's WebM demuxer detects alpha only via per-Block BlockAdditions — VP9's encoding mechanism is invisible to it. See "Friction notes" below.
+  - SHA-256 cache keyed by `{template OR html, vars, styleVars, durationSeconds, width, height}` under `editor/apps/web/.aivc-cache/overlays/<hash>.webm`. Cache hits return in ~1 ms; fresh renders take ~5–12 s depending on duration.
+  - In-memory job store pinned on `globalThis` for cross-route persistence in dev mode.
+- **`/api/overlays/render`** — POST `{ template | html, vars, styleVars?, durationSeconds?, width?, height? }` → `{ jobId, status, hash }`. Schema enforces exactly one of `template` or `html`.
+- **`/api/overlays/jobs/[jobId]`** — GET → live job state with progress.
+- **`/api/overlays/files/[hash]`** — GET → `video/webm`, immutable cache headers.
+- **`/api/overlays/templates`** — GET → all overlay templates with their full meta.json.
+- **`/api/overlays/save-template`** — POST → persists a custom overlay as `/generator/overlays/<slug>/`. Generates a slug from the AI-supplied name (≤60 chars), avoids collisions automatically.
+- **`/api/overlays/test-page?h=<hash>`** — undocumented dev tool, renders the overlay over a pink/green diagonal so transparency can be verified independent of OpenCut.
+
+### Added — Overlay AI tools (six new on top of the four cut/trim/addClip/getState ones)
+| Tool | Purpose |
+|---|---|
+| `editor.listTemplates` | Discover overlay templates + variable schemas |
+| `editor.addOverlay` | Render an existing template (vars + styleVars) on a fresh overlay track |
+| `editor.modifyOverlay` | Re-render a placed overlay with patched vars/styleVars/duration (defaults to most recent) |
+| `editor.removeOverlay` | Delete an overlay (defaults to most recent) |
+| `editor.renderCustomOverlay` | Render arbitrary AI-generated HTML/CSS — for designs no built-in covers |
+| `editor.saveAsTemplate` | Persist the last custom overlay as a reusable template; AI generates a name (≤60 chars) from the original request |
+
+### Changed
+- **`mcp-server/README.md`** — clearly marks the stdio server as held back for alpha.3. Real `editor.*` tools live in the editor itself for alpha.2; the WebSocket bridge from the stdio server to the running browser tab lands in alpha.3.
+- **`editor/apps/web/src/services/video-cache/service.ts`** — one-line change: `alpha: true` on `CanvasSink` so mediabunny's WebGL2-based `ColorAlphaMerger` is wired up for transparent overlays. Opaque footage is unaffected.
+
+### Dependencies (editor/apps/web)
+- `ai@^6`, `@ai-sdk/anthropic`, `@ai-sdk/google`, `@ai-sdk/openai`, `@ai-sdk/react`, `ollama-ai-provider-v2` — chat layer.
+- `puppeteer@^24`, `ffmpeg-static@^5` — overlay render pipeline.
+
+### Friction notes resolved during the build
+- **`onToolCall` deadlock.** Vercel AI SDK 6's `SerialJobExecutor` deadlocks if `onToolCall` awaits `addToolOutput` while the stream is still running. Fix: fire-and-forget `addToolOutput().then().catch()` inside the inner async IIFE in `chat-sidebar.tsx`.
+- **`addTrack` + `insertElement` pruning race.** OpenCut's `CommandManager` runs a reactor after every command that filters overlay tracks with zero elements. The naive sequence `addTrack` → `insertElement` lost the new track to the reactor before the insert landed. Fix: wrap both commands in a single `BatchCommand`.
+- **Bun's `--no-postinstall`.** `bun add ffmpeg-static` doesn't run the postinstall that downloads the binary, so ffmpeg.exe was missing. `resolveFfmpegBinary` now falls back to `node_modules/ffmpeg-static/ffmpeg.exe` when ffmpeg-static returns the Bun virtual `\ROOT\…` path.
+- **Puppeteer 24 ↔ Chrome 148 mismatch.** Listed in `INSTALL.md`: `bun x puppeteer browsers install chrome` after install.
+- **Next.js Turbopack module isolation.** Plain module-level `Map`s disappear between POST and GET handlers in dev mode. Both the job store and the overlay registry pin themselves on `globalThis`.
+- **Provider lineup drift.** No hardcoded model names — `*_MODEL` env vars are required, missing them produces a clear German error pointing at the provider's official model docs.
+- **9:16 / portrait projects.** Cache key now includes width/height; render pipeline accepts a viewport size and injects `html,body{width:Xpx !important;height:Ypx !important}` so templates designed for 16:9 still fill a 9:16 canvas.
+- **VP9 alpha vs mediabunny.** Switched encoder from `libvpx-vp9` to `libvpx` (VP8). VP9 with `yuva420p` produces WebMs that Chrome's `<video>` and editing software (Premiere etc.) decode correctly, but mediabunny detects alpha only via per-Block BlockAdditions — only VP8's encoding produces those. Output files are ~2× larger but still small in absolute terms (≈250 KB for 5 s).
+
+### Known scope cuts (deferred)
+- **Bidirectional state sync** (UI → chat awareness): chat does not yet observe UI-driven edits. Planned for alpha.3.
+- **MCP-server WebSocket bridge** to running browser tab: alpha.3 (lets external agents like Claude Code drive the timeline).
+- **Live preview while AI edits**: alpha.3.
+- **Generator-MP4 → timeline drag-and-drop**: alpha.4.
+
 ## v3.0.0-alpha.1 – 2026-05-08 · Foundation (editor + generator + MCP skeleton)
 
 **This is a foundation release**, not a feature release. The actual AI layer + editor wiring lands in v3.0.0-alpha.2 onwards.

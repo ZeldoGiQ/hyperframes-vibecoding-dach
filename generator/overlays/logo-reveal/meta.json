@@ -1,0 +1,34 @@
+{
+  "id": "logo-reveal",
+  "name": "Logo Reveal",
+  "type": "overlay",
+  "duration": 3,
+  "aspectRatio": "16:9",
+  "transparent": true,
+  "description": "Animated logo intro for the start of a clip — 3s reveal with glow + scale + brand name fade-in.",
+  "variables": [
+    {
+      "key": "LOGO_URL",
+      "label": "Logo URL",
+      "type": "string",
+      "required": true,
+      "example": "https://example.com/logo.png"
+    },
+    {
+      "key": "BRAND_NAME",
+      "label": "Brand name",
+      "type": "string",
+      "required": false,
+      "maxLength": 40,
+      "example": "AIVC DACH"
+    }
+  ],
+  "styleVars": [
+    { "key": "--primary-color", "label": "Glow color", "type": "color", "default": "#00FF94" },
+    { "key": "--accent-color", "label": "Secondary glow color", "type": "color", "default": "#9D4EDD" },
+    { "key": "--text-color", "label": "Brand-name color", "type": "color", "default": "#FFFFFF" },
+    { "key": "--logo-size", "label": "Logo height (px)", "type": "number", "default": 320 },
+    { "key": "--font-size-brand", "label": "Brand-name font size (px)", "type": "number", "default": 56 },
+    { "key": "--animation-duration", "label": "Total reveal duration (s)", "type": "number", "default": 3 }
+  ]
+}

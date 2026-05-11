@@ -1,128 +1,183 @@
-# 📥 Installation – step by step
+# 📥 Installation — AIVC DACH alpha.2
 
-You don't need any technical background. Just follow this guide.
+Two flavours of the project, two install paths. Pick the one you need:
 
----
+- **A) The AI editor + overlay engine** (alpha.2 — what most new users want) — Bun + Puppeteer + ffmpeg + AI provider. ~10 min.
+- **B) The generator CLI alone** (v2.0 standalone MP4 templates) — Node only. ~3 min.
 
-## Prerequisites
-
-The only thing you install yourself is **Claude Code**. The installer takes care of everything else.
-
-👉 [Install Claude Code](https://docs.claude.com/en/docs/claude-code) (free)
+Most people want **A**. **B** is for headless / scripted MP4 rendering without the editor UI.
 
 ---
 
-## Method 1: With Claude Code (recommended)
+## A) AI editor + overlay engine
 
-Easiest way. You tell Claude what to do.
+### A1. Prerequisites
 
-**Step 1:** Open an empty folder on your computer (e.g. `Documents/Videos`).
+| What | Why | How to install |
+|---|---|---|
+| **Bun ≥ 1.3** | Package manager + runtime for the editor and the overlay-render pipeline | https://bun.sh — `curl -fsSL https://bun.sh/install \| bash` on macOS/Linux, `powershell -c "irm bun.sh/install.ps1 \| iex"` on Windows |
+| **Git** | Clone the repo | https://git-scm.com |
+| **A modern Chrome** (system install) | Not strictly required — Puppeteer downloads its own copy in step A3 — but having one locally helps for debugging | https://www.google.com/chrome/ |
+| **An AI provider API key** | Drives the chat. One of Anthropic, Google, OpenAI, or a local Ollama install | See A4 below |
 
-**Step 2:** Start Claude Code in that folder.
-
-**Step 3:** Paste this prompt:
-
-```
-Install AIVC DACH from
-https://github.com/ZeldoGiQ/aivc-dach
-
-Do everything automatically:
-1. Clone the repo
-2. Check & install missing dependencies
-3. Install the local renderer (cd renderer && npm install)
-4. Register SKILL.md
-5. Run a test render
-```
-
-**That's it.** Claude walks you through step by step.
-
----
-
-## Method 2: Manual (for devs)
-
-### Windows
+### A2. Clone and pick the alpha.2 branch
 
 ```bash
 git clone https://github.com/ZeldoGiQ/aivc-dach.git
 cd aivc-dach
-scripts\install.bat
+git checkout v3.0.0-alpha.2-ai-layer   # until alpha.2 is merged into main
 ```
 
-### Mac/Linux
+### A3. One-shot setup (Windows + macOS + Linux)
+
+From the repo root:
 
 ```bash
-git clone https://github.com/ZeldoGiQ/aivc-dach.git
-cd aivc-dach
-chmod +x scripts/install.sh
-./scripts/install.sh
+# Windows (cmd or PowerShell):
+scripts\setup-editor.bat
+
+# macOS / Linux:
+chmod +x scripts/setup-editor.sh
+./scripts/setup-editor.sh
 ```
 
----
+The script does five things in order:
 
-## What gets installed?
+1. `bun install` from `editor/` (Turborepo workspaces resolve everything).
+2. `bun install` from `editor/apps/web/` (paranoia — should be a no-op after step 1).
+3. **Runs `ffmpeg-static`'s postinstall manually.** Bun's default is `--no-postinstall`, so the ffmpeg binary was never downloaded. The script does it for you (`node node_modules/ffmpeg-static/install.js`).
+4. **Downloads the matching Chrome for Puppeteer 24** (`bun x puppeteer browsers install chrome` — ~200 MB, one-shot).
+5. Copies `editor/apps/web/.env.example` → `editor/apps/web/.env.local` if the latter doesn't exist yet.
 
-| Component | Why you need it |
-|-----------|----------------|
-| **Node.js (≥ 18)** | Runs the local renderer |
-| **Puppeteer + Chromium** | Headless browser for frame capture (~150 MB, one-shot via npm) |
-| **ffmpeg** | Encodes the frames into an MP4 (falls back to `ffmpeg-static` if missing) |
-| **Python 3.11+** | Optional, for Faster Whisper |
-| **Faster Whisper** | Subtitle generation from audio (planned for v2.1) |
-| **Git** | Auto-updates |
+If you'd rather run the steps manually, A3 is just those five commands — see the bottom of this file.
 
-If something is missing, Claude tells you exactly how to install it.
+### A4. Pick an AI provider
 
----
+Open `editor/apps/web/.env.local` and set two values:
 
-## Storage locations
+```env
+AIVC_AI_PROVIDER=anthropic     # or: google | openai | ollama
+ANTHROPIC_API_KEY=sk-ant-…     # the key for the provider you chose
+ANTHROPIC_MODEL=               # required — see the link in the file
+```
 
-After install, your files live here:
+**Model selection is per-provider and required** — there's no fallback, because provider lineups change too fast for hardcoded defaults to age well. Each provider block in `.env.example` links to its official model list. Pick whatever's current:
+
+| Provider | API key | Model docs |
+|---|---|---|
+| Anthropic | https://console.anthropic.com/settings/keys | https://docs.anthropic.com/en/docs/about-claude/models |
+| Google (Gemini) | https://aistudio.google.com/app/apikey | https://ai.google.dev/gemini-api/docs/models |
+| OpenAI | https://platform.openai.com/api-keys | https://platform.openai.com/docs/models |
+| Ollama (local) | — (free, runs offline) | https://ollama.com/library (run `ollama pull <id>` first) |
+
+> ⚠️ Tip on small models: cheap/fast models like `gemini-3.1-flash-lite` work for simple tools (cut, listTemplates, addOverlay with built-in templates) but tend to skimp on `editor.renderCustomOverlay`, where they have to emit a full HTML document. If custom designs come back empty or trivial, switch `*_MODEL` to a heavier model (e.g. `gemini-2.5-pro`, `claude-sonnet-4-5`) for that session.
+
+### A5. Run
+
+From `editor/apps/web/`:
+
+```bash
+bun run dev
+```
+
+The dev server starts at **http://localhost:3000**. Open it in **Chrome** (mediabunny needs WebCodecs + WebGL2 — Firefox / Safari are degraded; a banner reminds you).
+
+Create a project, drop a video clip into the assets panel, and click the green **AI Chat** button in the top-right of the preview area.
+
+Try:
+- `What's on the timeline?`
+- `Cut at 3 seconds`
+- `Mach Lower Third mit Hannes Founder bei 5 Sekunden`
+- `Mach Endcard am Ende mit AIVC Branding`
+- `Mach einen CTA mit "Abonniere den Kanal"`
+- *(after a custom design you like)* `Speicher das als Template`
+
+### A6. Storage layout
 
 | What | Where |
-|-----|-----|
-| Repo + templates | wherever you ran `git clone` |
-| Renderer | `<REPO>/renderer/` (`render.js`, `node_modules/`, …) |
-| Brand config | `~/.aivc-dach/brand.config.json` |
-| Your logos | `~/.aivc-dach/assets/` |
-| Rendered videos | `./output/` (in the working directory you launch Claude from) |
+|---|---|
+| Rendered overlay WebMs (cache, can delete safely) | `editor/apps/web/.aivc-cache/overlays/` |
+| Saved templates (`speicher das als Template`) | `generator/overlays/<slug>/` |
+| Bundled templates that ship with the repo | `generator/overlays/{lower-third, title-card, …}/` |
+| Your project (OpenCut IndexedDB) | Browser-local, in Chrome's site storage for `localhost:3000` |
+| Your API key | `editor/apps/web/.env.local` — gitignored, **never** leaves your disk |
 
-If you previously used **v1.x** with `~/.hyperframes-vbc/`, the installer copies your config to `~/.aivc-dach/` automatically. The old folder is left untouched – delete it manually when you're sure.
+---
+
+## B) Generator CLI only
+
+For the v2.0 standalone MP4 templates (`news-intro`, `promo-clip`, …) without the editor UI.
+
+```bash
+git clone https://github.com/ZeldoGiQ/aivc-dach.git
+cd aivc-dach
+# Windows:
+generator\scripts\install.bat
+# macOS / Linux:
+chmod +x generator/scripts/install.sh
+./generator/scripts/install.sh
+```
+
+This installs Node, Puppeteer + Chromium, and ffmpeg-static into `generator/renderer/node_modules/`. Then render with:
+
+```bash
+node generator/renderer/render.js --template news-intro --vars '{"TOPIC":"Gemini 4 is here"}'
+```
+
+Output lands in `generator/output/`.
 
 ---
 
 ## Trouble during installation?
 
-**Problem:** "Node.js not found"
-- **Fix:** [Download Node.js](https://nodejs.org/) (recommended version)
+**Problem:** `bun: command not found`
+- Bun was installed but isn't on PATH yet. Open a fresh terminal (the installer prints the PATH line you may need to add to `~/.bashrc` / `~/.zshrc` / `$PROFILE` for PowerShell).
 
-**Problem:** "Python not found"
-- This is **optional**. Subtitle features need it, video rendering does not. You can skip safely.
-- Windows: [Python from python.org](https://www.python.org/downloads/) – tick "Add to PATH" during install.
-- Mac: `brew install python@3.11`
-- Linux: `sudo apt install python3 python3-pip`
+**Problem:** `Could not find Chrome (ver. 148.…)` when the first overlay render runs
+- Step A3.4 didn't run, or it ran for an older Puppeteer. From `editor/apps/web/`:
+  ```bash
+  bun x puppeteer browsers install chrome
+  ```
 
-**Problem:** "ffmpeg not found"
-- The renderer auto-falls-back to `ffmpeg-static` (bundled). You don't have to install it manually.
-- If you want it system-wide:
-  - Windows: `winget install Gyan.FFmpeg`
-  - Mac: `brew install ffmpeg`
-  - Linux: `sudo apt install ffmpeg`
+**Problem:** `spawn \ROOT\node_modules\.bun\…\ffmpeg.exe ENOENT`
+- Bun didn't run `ffmpeg-static`'s postinstall. From `editor/apps/web/`:
+  ```bash
+  node node_modules/ffmpeg-static/install.js
+  ```
 
-**Problem:** "Chromium download failed" / Puppeteer fails
-- See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) – the renderer can use your locally installed Chrome or Edge as a fallback.
+**Problem:** `Bitte ANTHROPIC_API_KEY in editor/apps/web/.env.local setzen`
+- The selected provider has no key set. Open `.env.local` and fill in the key for whichever provider matches `AIVC_AI_PROVIDER`.
+
+**Problem:** `<PROVIDER>_MODEL nicht gesetzt`
+- You picked a provider but didn't pick a model. The error message links you to the provider's model docs — paste the id you want into the matching `*_MODEL` env var.
+
+**Problem:** AI says it added an overlay but the preview is a black rectangle
+- You're probably on an old cached build. Hard-refresh the page (`Ctrl+Shift+R`) so mediabunny re-initialises its video cache with `alpha: true`. If still broken, clear `editor/apps/web/.aivc-cache/overlays/` and try again.
+
+**Problem:** Custom-rendered overlay (`editor.renderCustomOverlay`) is empty or comes back as just a tiny element
+- Your model is too small to emit a full HTML document. Switch to a heavier model in `.env.local` and retry.
 
 **Other problems**
 - Open an issue: https://github.com/ZeldoGiQ/aivc-dach/issues
-- Or ask the **[Vibe Coding DACH](https://www.skool.com/vibe-coding-dach) Skool community** – German-speaking creators, courses, premium templates, and live workflow reviews.
+- Or ask the **[Vibe Coding DACH](https://www.skool.com/vibe-coding-dach) Skool community**.
 
 ---
 
-## First run
+## Manual setup (if scripts/setup-editor.* refuses to run)
 
-After a successful install:
+Each step on its own:
 
-1. Open Claude Code in any folder.
-2. Say: `Make a news intro about AI` (no setup required – plug-and-play mode).
-3. Want personal branding? Say: `Set up brand` and answer 5 questions.
+```bash
+# from repo root
+cd editor
+bun install
 
-🎉 **Done.**
+cd apps/web
+bun install
+node node_modules/ffmpeg-static/install.js
+bun x puppeteer browsers install chrome
+cp .env.example .env.local   # then edit .env.local
+bun run dev
+```
+
+Done.

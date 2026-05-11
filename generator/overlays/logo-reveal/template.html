@@ -1,0 +1,104 @@
+<!--
+  AIVC Overlay: Logo Reveal
+  Variables: {{LOGO_URL}}, {{BRAND_NAME}}
+  TRANSPARENT background — overlay only.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary-color: #00FF94;
+    --accent-color: #9D4EDD;
+    --text-color: #FFFFFF;
+    --logo-size: 320px;
+    --font-size-brand: 56px;
+    --animation-duration: 3s;
+  }
+  html, body { background: transparent; margin: 0; padding: 0; }
+  * { box-sizing: border-box; }
+  body {
+    width: 1920px; height: 1080px;
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+    position: relative;
+  }
+  .stage {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+  }
+  .glow {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 720px; height: 720px;
+    transform: translate(-50%, -50%);
+    background:
+      radial-gradient(circle at center, var(--primary-color) 0%, transparent 55%),
+      radial-gradient(circle at 30% 70%, var(--accent-color) 0%, transparent 60%);
+    filter: blur(80px);
+    opacity: 0;
+    animation: glowPulse var(--animation-duration) ease-in-out forwards;
+  }
+  .logo {
+    height: var(--logo-size);
+    width: auto;
+    opacity: 0;
+    transform: scale(0.7);
+    filter: drop-shadow(0 0 40px var(--primary-color));
+    animation: logoIn calc(var(--animation-duration) * 0.55) cubic-bezier(0.16, 1, 0.3, 1) forwards,
+               logoOut calc(var(--animation-duration) * 0.18) ease-in calc(var(--animation-duration) * 0.82) forwards;
+    position: relative;
+  }
+  .brand-name {
+    color: var(--text-color);
+    font-size: var(--font-size-brand);
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    opacity: 0;
+    transform: translateY(16px);
+    animation: nameIn calc(var(--animation-duration) * 0.4) ease-out calc(var(--animation-duration) * 0.4) forwards,
+               nameOut calc(var(--animation-duration) * 0.18) ease-in calc(var(--animation-duration) * 0.82) forwards;
+    position: relative;
+  }
+  @keyframes glowPulse {
+    0%   { opacity: 0; }
+    35%  { opacity: 0.85; }
+    75%  { opacity: 0.6; }
+    100% { opacity: 0; }
+  }
+  @keyframes logoIn {
+    0%   { opacity: 0; transform: scale(0.7); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  @keyframes logoOut {
+    0%   { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.05); }
+  }
+  @keyframes nameIn {
+    0%   { opacity: 0; transform: translateY(16px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes nameOut {
+    0%   { opacity: 1; }
+    100% { opacity: 0; }
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="glow"></div>
+    <img class="logo" src="{{LOGO_URL}}" alt="Logo">
+    {{#if BRAND_NAME}}<div class="brand-name">{{BRAND_NAME}}</div>{{/if}}
+  </div>
+</body>
+</html>

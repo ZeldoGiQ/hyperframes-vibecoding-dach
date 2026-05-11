@@ -1,0 +1,36 @@
+{
+  "id": "cta-banner",
+  "name": "CTA Banner",
+  "type": "overlay",
+  "duration": 4,
+  "aspectRatio": "16:9",
+  "transparent": true,
+  "description": "Bottom full-width call-to-action strip with pulsing button. Slides up from below.",
+  "variables": [
+    {
+      "key": "TEXT",
+      "label": "CTA text",
+      "type": "string",
+      "required": true,
+      "maxLength": 50,
+      "example": "Get the full toolkit at aivc.dev"
+    },
+    {
+      "key": "BUTTON_TEXT",
+      "label": "Button label",
+      "type": "string",
+      "required": false,
+      "maxLength": 20,
+      "example": "Click"
+    }
+  ],
+  "styleVars": [
+    { "key": "--primary-color", "label": "Button color", "type": "color", "default": "#00FF94" },
+    { "key": "--text-color", "label": "Banner text color", "type": "color", "default": "#FFFFFF" },
+    { "key": "--button-text-color", "label": "Button text color", "type": "color", "default": "#0A0A0A" },
+    { "key": "--bg-color", "label": "Banner background", "type": "color", "default": "rgba(10,10,10,0.92)" },
+    { "key": "--font-size-text", "label": "Banner text size (px)", "type": "number", "default": 36 },
+    { "key": "--font-size-button", "label": "Button label size (px)", "type": "number", "default": 28 },
+    { "key": "--animation-duration", "label": "Slide-up duration (s)", "type": "number", "default": 0.4 }
+  ]
+}

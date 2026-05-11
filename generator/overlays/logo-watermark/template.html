@@ -1,0 +1,54 @@
+<!--
+  AIVC Overlay: Logo Watermark
+  Variables: {{LOGO_URL}}, {{OPACITY}}
+  TRANSPARENT background — overlay only.
+  Position controlled by adding one of: corner-top-left | corner-top-right | corner-bottom-left | corner-bottom-right
+  on the .watermark element. Default: bottom-right.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  :root {
+    --logo-size: 96px;
+    --margin: 48px;
+    --opacity: 0.7;
+    --animation-duration: 0.3s;
+  }
+  html, body { background: transparent; margin: 0; padding: 0; }
+  * { box-sizing: border-box; }
+  body {
+    width: 1920px; height: 1080px;
+    overflow: hidden;
+    position: relative;
+  }
+  .watermark {
+    position: absolute;
+    height: var(--logo-size);
+    opacity: 0;
+    animation: fadeIn var(--animation-duration) ease-out forwards;
+  }
+  .watermark img {
+    height: 100%;
+    width: auto;
+    display: block;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+  }
+  /* Position presets — toggled by class on .watermark */
+  .watermark.corner-top-left     { top: var(--margin); left: var(--margin); }
+  .watermark.corner-top-right    { top: var(--margin); right: var(--margin); }
+  .watermark.corner-bottom-left  { bottom: var(--margin); left: var(--margin); }
+  .watermark.corner-bottom-right { bottom: var(--margin); right: var(--margin); }
+  @keyframes fadeIn {
+    0%   { opacity: 0; }
+    100% { opacity: var(--opacity); }
+  }
+</style>
+</head>
+<body>
+  <div class="watermark corner-bottom-right">
+    <img src="{{LOGO_URL}}" alt="Watermark">
+  </div>
+</body>
+</html>

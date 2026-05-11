@@ -1,0 +1,83 @@
+<!--
+  AIVC Overlay: CTA Banner
+  Variables: {{TEXT}}, {{BUTTON_TEXT}}
+  TRANSPARENT background — overlay only.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary-color: #00FF94;
+    --text-color: #FFFFFF;
+    --button-text-color: #0A0A0A;
+    --bg-color: rgba(10, 10, 10, 0.92);
+    --font-size-text: 36px;
+    --font-size-button: 28px;
+    --animation-duration: 0.4s;
+  }
+  html, body { background: transparent; margin: 0; padding: 0; }
+  * { box-sizing: border-box; }
+  body {
+    width: 1920px; height: 1080px;
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+    position: relative;
+  }
+  .banner {
+    position: absolute;
+    left: 0; right: 0;
+    bottom: 0;
+    background: var(--bg-color);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-top: 2px solid var(--primary-color);
+    padding: 36px 96px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 48px;
+    transform: translateY(100%);
+    animation: slideUp var(--animation-duration) cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .text {
+    color: var(--text-color);
+    font-size: var(--font-size-text);
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    flex: 1;
+  }
+  .button {
+    color: var(--button-text-color);
+    background: var(--primary-color);
+    font-size: var(--font-size-button);
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    padding: 18px 44px;
+    border-radius: 999px;
+    white-space: nowrap;
+    box-shadow: 0 0 0 0 var(--primary-color);
+    animation: pulse 2s ease-in-out infinite;
+    animation-delay: var(--animation-duration);
+  }
+  @keyframes slideUp {
+    0%   { transform: translateY(100%); }
+    100% { transform: translateY(0); }
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(0, 255, 148, 0.6); }
+    50%      { box-shadow: 0 0 0 24px rgba(0, 255, 148, 0); }
+  }
+</style>
+</head>
+<body>
+  <div class="banner">
+    <div class="text">{{TEXT}}</div>
+    <div class="button">{{BUTTON_TEXT}}</div>
+  </div>
+</body>
+</html>

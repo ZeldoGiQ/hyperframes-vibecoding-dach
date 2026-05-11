@@ -1,0 +1,35 @@
+{
+  "id": "title-card",
+  "name": "Title Card",
+  "type": "overlay",
+  "duration": 3,
+  "aspectRatio": "16:9",
+  "transparent": true,
+  "description": "Headline with optional subline, fade-in + scale-up at center. Windowed (not fullscreen).",
+  "variables": [
+    {
+      "key": "HEADLINE",
+      "label": "Headline",
+      "type": "string",
+      "required": true,
+      "maxLength": 60,
+      "example": "How AI Will Reshape Video"
+    },
+    {
+      "key": "SUBLINE",
+      "label": "Subline",
+      "type": "string",
+      "required": false,
+      "maxLength": 100,
+      "example": "A 5-minute breakdown for creators"
+    }
+  ],
+  "styleVars": [
+    { "key": "--primary-color", "label": "Accent color", "type": "color", "default": "#00FF94" },
+    { "key": "--text-color", "label": "Text color", "type": "color", "default": "#FFFFFF" },
+    { "key": "--bg-color", "label": "Card background", "type": "color", "default": "rgba(10,10,10,0.92)" },
+    { "key": "--font-size-headline", "label": "Headline font size (px)", "type": "number", "default": 96 },
+    { "key": "--font-size-subline", "label": "Subline font size (px)", "type": "number", "default": 36 },
+    { "key": "--animation-duration", "label": "Fade duration (s)", "type": "number", "default": 0.5 }
+  ]
+}

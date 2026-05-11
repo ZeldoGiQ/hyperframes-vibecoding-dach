@@ -32,6 +32,7 @@ mcp-server/bun.lockb
 # Editor (Next.js + Bun, OpenCut fork)
 editor/node_modules/
 editor/.next/
+editor/apps/web/.aivc-cache/
 editor/apps/*/node_modules/
 editor/apps/*/.next/
 editor/apps/*/.open-next/

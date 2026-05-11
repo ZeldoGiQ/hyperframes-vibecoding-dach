@@ -281,6 +281,11 @@ export class VideoCache {
 			const sink = new CanvasSink(videoTrack, {
 				poolSize: 3,
 				fit: "contain",
+				// AIVC DACH: enable alpha so AI-generated overlay WebMs
+				// (VP9 with alpha_mode=1) composite transparently instead of
+				// over a black background. Opaque videos are unaffected —
+				// mediabunny still produces alpha=255 for every pixel.
+				alpha: true,
 			});
 
 			this.sinks.set(mediaId, {

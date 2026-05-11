@@ -1,0 +1,32 @@
+{
+  "id": "logo-watermark",
+  "name": "Logo Watermark",
+  "type": "overlay",
+  "duration": 60,
+  "aspectRatio": "16:9",
+  "transparent": true,
+  "description": "Persistent logo watermark, fades in at start. Position configurable. Default duration 60s — set to clip duration when adding.",
+  "variables": [
+    {
+      "key": "LOGO_URL",
+      "label": "Logo URL",
+      "type": "string",
+      "required": true,
+      "example": "https://example.com/logo.png"
+    },
+    {
+      "key": "OPACITY",
+      "label": "Opacity",
+      "type": "number",
+      "required": false,
+      "example": "0.7"
+    }
+  ],
+  "styleVars": [
+    { "key": "--position-corner", "label": "Corner (top-left | top-right | bottom-left | bottom-right)", "type": "string", "default": "bottom-right" },
+    { "key": "--logo-size", "label": "Logo height (px)", "type": "number", "default": 96 },
+    { "key": "--margin", "label": "Margin from corner (px)", "type": "number", "default": 48 },
+    { "key": "--opacity", "label": "Opacity", "type": "number", "default": 0.7 },
+    { "key": "--animation-duration", "label": "Fade-in duration (s)", "type": "number", "default": 0.3 }
+  ]
+}

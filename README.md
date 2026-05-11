@@ -20,20 +20,20 @@ aivc-dach/
 A single tool that lets non-technical creators:
 
 1. **Generate** ready-to-use intros, outros, shorts and sponsor reads from a one-line prompt (the v2.0.0 workflow).
-2. **Edit** raw footage with AI assistance — the editor's chat sidebar can cut, trim, add clips, drop a generated intro on the timeline, all via the **MCP server**.
-3. **Mix providers**: Claude (default), OpenAI or local Ollama via the Vercel AI SDK. BYOLLM.
+2. **Edit** raw footage with AI assistance — the editor's chat sidebar can cut, trim, add clips, render transparent overlays (lower-third, endcard, custom CSS designs, …) and drop them on a fresh track. External agents (Claude Code, Cursor) connect via the **MCP server** in alpha.3+.
+3. **Mix providers**: Anthropic (default), Google Gemini, OpenAI or local Ollama via the Vercel AI SDK. BYOLLM.
 
-This `v3.0.0-alpha.1` release is the **foundation**: branch + OpenCut fork + generator move + MCP skeleton. The actual AI integration (chat sidebar wired to MCP, drag-and-drop templates, bidirectional state sync) lands in subsequent v3.0.0-alpha.x and the v3.0.0 stable release.
+This `v3.0.0-alpha.2` release wires the **AI layer + overlay engine** end-to-end. The chat sidebar can cut/trim/add clips, drop one of seven built-in overlay templates onto a fresh overlay track, render fully custom HTML/CSS designs, and save a hit as a reusable template — all transparently composited over the footage. Bidirectional state sync (UI → chat) and the MCP-server bridge for external agents land in alpha.3+.
 
 ---
 
-## 🚦 Status of each module (alpha.1)
+## 🚦 Status of each module (alpha.2)
 
 | Module | What works today | What's coming |
 |---|---|---|
-| `editor/` | OpenCut fork builds & runs (`bun run dev:web` → http://localhost:3000), AIVC DACH branding (title, primary/accent colors, dark default) | Full branding pass, AI chat sidebar, MCP wiring, template drag-and-drop |
-| `generator/` | All v2.0.0 features (6 templates, renderer, install scripts, smoke test) work unchanged at the new path | None planned — feature-complete for now |
-| `mcp-server/` | stdio server, `ping` tool live, 4 stub tools defined for editor + generator | Real implementations: `editor.cut`, `editor.trim`, `editor.addClip`, `generator.render` |
+| `editor/` | OpenCut fork builds & runs (`bun run dev` from `editor/apps/web` → http://localhost:3000). AI chat sidebar with 10 tools: getState, cut, trim, addClip, listTemplates, addOverlay, modifyOverlay, removeOverlay, renderCustomOverlay, saveAsTemplate. WebM-alpha overlay pipeline (Puppeteer → VP8 with BlockAdditions alpha → mediabunny composit). | Bidirectional state sync, MCP-server bridge, generator-template drag-and-drop |
+| `generator/` | v2.0.0 CLI (6 standalone MP4 templates) + 7 new **overlay templates** (`generator/overlays/`, transparent WebMs rendered on demand by the editor) | None planned — both pipelines are stable |
+| `mcp-server/` | stdio server, `ping` tool live, 4 stub tools defined for editor + generator. Real `editor.*` tools live in the editor for alpha.2. | WebSocket bridge to the running browser tab so external agents (Claude Code, Cursor) can drive the timeline too — alpha.3 |
 | `shared/` | brand config + TypeScript types | Templates manifest (Phase 5) |
 
 ---
@@ -121,13 +121,27 @@ Both are green for v3.0.0-alpha.1. The editor doesn't have a CI smoke yet — th
 
 | Version | Phase | Scope |
 |---|---|---|
-| **v3.0.0-alpha.1** | Foundation (this PR) | Branch + OpenCut fork + generator move + MCP skeleton |
-| v3.0.0-alpha.2 | AI layer | Vercel AI SDK + Anthropic / OpenAI / Ollama providers, chat sidebar shell |
-| v3.0.0-alpha.3 | MCP wiring | `editor.cut`, `editor.trim`, `editor.addClip` connect to OpenCut's Zustand store |
-| v3.0.0-alpha.4 | Templates → editor | Drag-and-drop generator templates onto the timeline, live render preview |
-| v3.0.0-alpha.5 | State sync | Bidirectional: chat ↔ timeline live updates |
-| **v3.0.0** | Stable | Full branding pass, real production env, end-to-end smoke (footage → cut → drop intro → export) |
+| v3.0.0-alpha.1 | Foundation | Branch + OpenCut fork + generator move + MCP skeleton |
+| **v3.0.0-alpha.2** | AI layer + overlay engine (this PR) | Vercel AI SDK + 4 providers, 10 editor tools, 7 overlay templates, custom-HTML render + save-as-template, WebM-alpha pipeline |
+| v3.0.0-alpha.3 | MCP bridge + bidir state | WebSocket bridge from stdio MCP server to running browser tab; chat observes UI-driven edits; live preview during AI edits |
+| v3.0.0-alpha.4 | Generator → editor | Drag-and-drop generator MP4 templates onto the timeline |
+| **v3.0.0** | Stable | Full branding pass, real production env, end-to-end smoke (footage → cut → overlay → export) |
 | v3.1.0 | Polish | Native AIVC logo, custom Inter weights, tutorial videos |
+
+---
+
+## 🔌 Configuring the AI provider
+
+The chat sidebar in the editor talks to one of four LLM providers, picked via env vars in `editor/apps/web/.env.local` (copy from `.env.example`). **You pick the model**: AIVC DACH does not hardcode model names because provider lineups change too quickly to keep current. Set the `*_MODEL` env var to whatever's listed in the provider's official model docs at the time you set things up:
+
+| Provider | API key env | Model env | Pick a current model id from |
+|---|---|---|---|
+| Anthropic *(default)* | `ANTHROPIC_API_KEY` | `ANTHROPIC_MODEL` | https://docs.anthropic.com/en/docs/about-claude/models |
+| Google (Gemini) | `GOOGLE_GENERATIVE_AI_API_KEY` | `GEMINI_MODEL` | https://ai.google.dev/gemini-api/docs/models |
+| OpenAI | `OPENAI_API_KEY` | `OPENAI_MODEL` | https://platform.openai.com/docs/models |
+| Ollama (local) | — | `OLLAMA_MODEL` | https://ollama.com/library (also: `ollama pull <id>` first) |
+
+Switch providers by setting `AIVC_AI_PROVIDER=anthropic|google|openai|ollama`. If a `*_MODEL` env var is empty when the chosen provider runs, the chat surfaces a German error pointing you at the docs URL above — no silent fallback to a possibly-deprecated default.
 
 ---
 
@@ -179,5 +193,5 @@ The editor under `editor/` is a fork of [OpenCut](https://github.com/OpenCut-app
 - **Editor foundation:** [OpenCut](https://github.com/OpenCut-app/OpenCut) (MIT)
 - **Generator:** Puppeteer + ffmpeg, six templates inspired by Hyperframes-style workflows
 - **MCP server:** Built on [@modelcontextprotocol/sdk](https://github.com/modelcontextprotocol/typescript-sdk)
-- **AI layer (planned):** [Vercel AI SDK](https://github.com/vercel/ai) — Anthropic / OpenAI / Ollama providers
+- **AI layer:** [Vercel AI SDK](https://github.com/vercel/ai) — Anthropic / Google / OpenAI / Ollama providers
 - **Community:** [Vibe Coding DACH](https://www.skool.com/vibe-coding-dach) Skool (German-speaking creators — courses, premium templates, live workflow reviews)

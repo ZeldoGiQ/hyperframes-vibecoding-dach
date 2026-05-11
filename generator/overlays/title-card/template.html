@@ -1,0 +1,77 @@
+<!--
+  AIVC Overlay: Title Card
+  Variables: {{HEADLINE}}, {{SUBLINE}}
+  TRANSPARENT background — overlay only.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary-color: #00FF94;
+    --text-color: #FFFFFF;
+    --bg-color: rgba(10, 10, 10, 0.92);
+    --font-size-headline: 96px;
+    --font-size-subline: 36px;
+    --animation-duration: 0.5s;
+  }
+  html, body { background: transparent; margin: 0; padding: 0; }
+  * { box-sizing: border-box; }
+  body {
+    width: 1920px; height: 1080px;
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+    position: relative;
+  }
+  .card-wrap {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0.92);
+    opacity: 0;
+    animation: fadeScaleIn var(--animation-duration) cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .card {
+    background: var(--bg-color);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 64px 96px;
+    border-top: 4px solid var(--primary-color);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.4),
+                0 0 60px rgba(0, 255, 148, 0.08);
+    max-width: 1280px;
+    text-align: center;
+  }
+  .headline {
+    color: var(--text-color);
+    font-size: var(--font-size-headline);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+  .subline {
+    color: var(--text-color);
+    opacity: 0.72;
+    font-size: var(--font-size-subline);
+    font-weight: 500;
+    margin-top: 24px;
+  }
+  @keyframes fadeScaleIn {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.92); }
+    100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  }
+</style>
+</head>
+<body>
+  <div class="card-wrap">
+    <div class="card">
+      <h1 class="headline">{{HEADLINE}}</h1>
+      {{#if SUBLINE}}<div class="subline">{{SUBLINE}}</div>{{/if}}
+    </div>
+  </div>
+</body>
+</html>

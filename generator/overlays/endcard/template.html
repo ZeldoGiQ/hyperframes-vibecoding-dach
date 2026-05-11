@@ -1,0 +1,144 @@
+<!--
+  AIVC Overlay: Endcard
+  Variables: {{TITLE}}, {{SUBSCRIBE_HINT}}, {{NEXT_VIDEO}}
+  TRANSPARENT background — overlay only.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary-color: #00FF94;
+    --accent-color: #9D4EDD;
+    --text-color: #FFFFFF;
+    --bg-color: rgba(10, 10, 10, 0.95);
+    --font-size-title: 104px;
+    --font-size-hint: 38px;
+    --font-size-next: 30px;
+    --animation-duration: 0.5s;
+  }
+  html, body { background: transparent; margin: 0; padding: 0; }
+  * { box-sizing: border-box; }
+  body {
+    width: 1920px; height: 1080px;
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+    position: relative;
+  }
+  /* Fullscreen frosted backdrop */
+  .backdrop {
+    position: absolute;
+    inset: 0;
+    background: var(--bg-color);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    opacity: 0;
+    animation: fadeBackdrop var(--animation-duration) ease-out forwards;
+  }
+  /* Diagonal gradient accent (top-left primary, bottom-right accent) */
+  .gradient {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 18% 22%, var(--primary-color) 0%, transparent 38%),
+      radial-gradient(circle at 82% 80%, var(--accent-color) 0%, transparent 42%);
+    filter: blur(120px);
+    opacity: 0;
+    animation: fadeGradient calc(var(--animation-duration) * 1.6) ease-out forwards;
+  }
+  .layout {
+    position: absolute;
+    inset: 0;
+    padding: 96px 128px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .top {
+    flex: 1;
+    display: flex;
+    align-items: center;
+  }
+  .title {
+    color: var(--text-color);
+    font-size: var(--font-size-title);
+    font-weight: 900;
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    max-width: 1400px;
+    opacity: 0;
+    transform: translateY(24px);
+    animation: revealUp var(--animation-duration) cubic-bezier(0.16, 1, 0.3, 1) calc(var(--animation-duration) * 0.6) forwards;
+  }
+  .bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+    color: var(--primary-color);
+    font-size: var(--font-size-hint);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    opacity: 0;
+    transform: translateY(16px);
+    animation: revealUp var(--animation-duration) cubic-bezier(0.16, 1, 0.3, 1) calc(var(--animation-duration) * 1.4) forwards;
+  }
+  .hint::before {
+    content: "";
+    display: block;
+    width: 56px;
+    height: 4px;
+    background: var(--primary-color);
+    box-shadow: 0 0 16px var(--primary-color);
+  }
+  .next {
+    color: var(--text-color);
+    opacity: 0;
+    font-size: var(--font-size-next);
+    font-weight: 500;
+    letter-spacing: 0.005em;
+    transform: translateY(16px);
+    animation: revealUp var(--animation-duration) cubic-bezier(0.16, 1, 0.3, 1) calc(var(--animation-duration) * 2) forwards;
+  }
+  .next strong {
+    color: var(--accent-color);
+    font-weight: 700;
+    margin-right: 8px;
+  }
+  @keyframes fadeBackdrop {
+    0%   { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  @keyframes fadeGradient {
+    0%   { opacity: 0; }
+    100% { opacity: 0.55; }
+  }
+  @keyframes revealUp {
+    0%   { opacity: 0; transform: translateY(24px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+  <div class="backdrop"></div>
+  <div class="gradient"></div>
+  <div class="layout">
+    <div class="top">
+      <h1 class="title">{{TITLE}}</h1>
+    </div>
+    <div class="bottom">
+      {{#if SUBSCRIBE_HINT}}<div class="hint">{{SUBSCRIBE_HINT}}</div>{{/if}}
+      {{#if NEXT_VIDEO}}<div class="next"><strong>NEXT</strong>{{NEXT_VIDEO}}</div>{{/if}}
+    </div>
+  </div>
+</body>
+</html>

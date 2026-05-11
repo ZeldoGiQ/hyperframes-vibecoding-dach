@@ -1,0 +1,85 @@
+<!--
+  AIVC Overlay: Lower Third
+  Variables: {{NAME}}, {{TITLE}}
+  Style vars (CSS): --primary-color, --text-color, --bg-color,
+                    --font-size-name, --font-size-title, --animation-duration
+  TRANSPARENT background — overlay only.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary-color: #00FF94;
+    --text-color: #FFFFFF;
+    --bg-color: rgba(10, 10, 10, 0.85);
+    --font-size-name: 56px;
+    --font-size-title: 28px;
+    --animation-duration: 0.4s;
+  }
+  html, body { background: transparent; margin: 0; padding: 0; }
+  * { box-sizing: border-box; }
+  body {
+    width: 1920px; height: 1080px;
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+    position: relative;
+  }
+  .lower-third {
+    position: absolute;
+    left: 0;
+    bottom: 120px;
+    display: flex;
+    align-items: center;
+    transform: translateX(-100%);
+    animation: slideIn var(--animation-duration) cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .accent-bar {
+    width: 12px;
+    align-self: stretch;
+    background: var(--primary-color);
+    box-shadow: 0 0 24px var(--primary-color);
+  }
+  .content {
+    background: var(--bg-color);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 24px 56px 24px 32px;
+    border-left: none;
+  }
+  .name {
+    color: var(--text-color);
+    font-size: var(--font-size-name);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  .title {
+    color: var(--text-color);
+    opacity: 0.78;
+    font-size: var(--font-size-title);
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    margin-top: 6px;
+  }
+  @keyframes slideIn {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(0); }
+  }
+</style>
+</head>
+<body>
+  <div class="lower-third">
+    <div class="accent-bar"></div>
+    <div class="content">
+      <div class="name">{{NAME}}</div>
+      {{#if TITLE}}<div class="title">{{TITLE}}</div>{{/if}}
+    </div>
+  </div>
+</body>
+</html>

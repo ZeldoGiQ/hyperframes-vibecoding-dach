@@ -1,0 +1,45 @@
+{
+  "id": "endcard",
+  "name": "Endcard",
+  "type": "overlay",
+  "duration": 5,
+  "aspectRatio": "16:9",
+  "transparent": true,
+  "description": "Outro endcard with AIVC branding (dark + neon-green + violet). Three sections: title, subscribe hint, optional next-video slot.",
+  "variables": [
+    {
+      "key": "TITLE",
+      "label": "Endcard headline",
+      "type": "string",
+      "required": true,
+      "maxLength": 60,
+      "example": "Thanks for watching"
+    },
+    {
+      "key": "SUBSCRIBE_HINT",
+      "label": "Subscribe hint",
+      "type": "string",
+      "required": false,
+      "maxLength": 60,
+      "example": "Subscribe for more"
+    },
+    {
+      "key": "NEXT_VIDEO",
+      "label": "Next-video title (optional)",
+      "type": "string",
+      "required": false,
+      "maxLength": 60,
+      "example": "Next: Building an AI editor in 1h"
+    }
+  ],
+  "styleVars": [
+    { "key": "--primary-color", "label": "Primary color (neon)", "type": "color", "default": "#00FF94" },
+    { "key": "--accent-color", "label": "Accent color (violet)", "type": "color", "default": "#9D4EDD" },
+    { "key": "--text-color", "label": "Text color", "type": "color", "default": "#FFFFFF" },
+    { "key": "--bg-color", "label": "Backdrop color", "type": "color", "default": "rgba(10,10,10,0.95)" },
+    { "key": "--font-size-title", "label": "Title font size (px)", "type": "number", "default": 104 },
+    { "key": "--font-size-hint", "label": "Subscribe-hint font size (px)", "type": "number", "default": 38 },
+    { "key": "--font-size-next", "label": "Next-video font size (px)", "type": "number", "default": 30 },
+    { "key": "--animation-duration", "label": "Section reveal stagger (s)", "type": "number", "default": 0.5 }
+  ]
+}

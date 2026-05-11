@@ -1,0 +1,35 @@
+{
+  "id": "subtitle-card",
+  "name": "Subtitle Card",
+  "type": "overlay",
+  "duration": 5,
+  "aspectRatio": "16:9",
+  "transparent": true,
+  "description": "Speaker label + quote with quote marks. Bottom-center, fades up.",
+  "variables": [
+    {
+      "key": "SPEAKER",
+      "label": "Speaker name",
+      "type": "string",
+      "required": true,
+      "maxLength": 30,
+      "example": "Hannes Müller"
+    },
+    {
+      "key": "QUOTE",
+      "label": "Quote text",
+      "type": "string",
+      "required": true,
+      "maxLength": 200,
+      "example": "AI tools are not replacing creators — they're rewriting the floor of what one person can ship."
+    }
+  ],
+  "styleVars": [
+    { "key": "--primary-color", "label": "Quote-mark color", "type": "color", "default": "#00FF94" },
+    { "key": "--text-color", "label": "Text color", "type": "color", "default": "#FFFFFF" },
+    { "key": "--bg-color", "label": "Card background", "type": "color", "default": "rgba(10,10,10,0.88)" },
+    { "key": "--font-size-quote", "label": "Quote font size (px)", "type": "number", "default": 40 },
+    { "key": "--font-size-speaker", "label": "Speaker font size (px)", "type": "number", "default": 22 },
+    { "key": "--animation-duration", "label": "Fade-up duration (s)", "type": "number", "default": 0.45 }
+  ]
+}
